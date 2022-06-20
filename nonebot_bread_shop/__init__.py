@@ -10,7 +10,7 @@ from nonebot.adapters.onebot.v11 import Bot, Event, Message
 
 from .bread_handle import BreadDataManage, Action
 from .bread_operate import *
-from .bread_event import rob_events, buy_events, eat_events
+from .bread_event import rob_events, buy_events, eat_events, give_events
 
 
 bread_buy = on_command("bread_buy", aliases={"买面包", "buy", "🍞"}, priority=5)
@@ -25,8 +25,10 @@ BUY_EVENT = Buy()
 ROB_EVENT = Rob()
 GIVE_EVENT = Give()
 
-
+EAT_EVENT.add_events(eat_events)
+BUY_EVENT.add_events(buy_events)
 ROB_EVENT.add_events(rob_events)
+GIVE_EVENT.add_events(give_events)
 
 
 @bread_buy.handle()
@@ -37,9 +39,11 @@ async def _(event: Event, bot: Bot):
     group_id = await get_group_id(event.get_session_id())
 
     wait_time = cd_wait_time(group_id, user_qq, Action.BUY)
-    if wait_time:
+    if wait_time > 0:
         data = BreadDataManage(group_id).get_bread_data(user_qq)
         msg_txt = f"您还得等待{wait_time // 60}分钟才能买面包w，现在一共拥有{data.bread_num}个面包！您的面包排名为:{data.no}"
+    elif wait_time < 0:
+        msg_txt = f"你被禁止购买面包啦！{(abs(wait_time)+ CD.BUY.value) // 60}分钟后才能购买！"
     else:
         BUY_EVENT.set_group_id(group_id)
         BUY_EVENT.set_user_id(user_qq)
@@ -58,9 +62,11 @@ async def _(event: Event, bot: Bot):
     group_id = await get_group_id(event.get_session_id())
 
     wait_time = cd_wait_time(group_id, user_qq, Action.EAT)
-    if wait_time:
+    if wait_time > 0:
         data = BreadDataManage(group_id).get_bread_data(user_qq)
         msg_txt = f"您还得等待{wait_time // 60}分钟才能吃面包w，现在你的等级是Lv.{data.bread_eaten // 10}！您的面包排名为:{data.no}"
+    elif wait_time < 0:
+        msg_txt = f"你被禁止吃面包啦！{(abs(wait_time)+ CD.EAT.value) // 60}分钟后才能吃哦！"
     else:
         EAT_EVENT.set_group_id(group_id)
         EAT_EVENT.set_user_id(user_qq)
@@ -86,8 +92,10 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg()):
     robbed_name = await get_nickname(bot, robbed_qq, group_id)
 
     wait_time = cd_wait_time(group_id, user_qq, Action.ROB)
-    if wait_time:
+    if wait_time > 0:
         msg_txt = f"您还得等待{wait_time // 60}分钟才能抢面包w"
+    elif wait_time < 0:
+        msg_txt = f"你被禁止抢面包啦！{(abs(wait_time)+ CD.ROB.value) // 60}分钟后才能抢哦！"
     else:
         ROB_EVENT.set_group_id(group_id)
         ROB_EVENT.set_user_id(user_qq)
@@ -114,8 +122,10 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg()):
     robbed_name = await get_nickname(bot, robbed_qq, group_id)
 
     wait_time = cd_wait_time(group_id, user_qq, Action.GIVE)
-    if wait_time:
+    if wait_time > 0:
         msg_txt = f"您还得等待{wait_time // 60}分钟才能送面包w"
+    elif wait_time < 0:
+        msg_txt = f"你被禁止送面包啦！{(abs(wait_time)+ CD.GIVE.value) // 60}分钟后才能赠送哦！"
     else:
         GIVE_EVENT.set_group_id(group_id)
         GIVE_EVENT.set_user_id(user_qq)

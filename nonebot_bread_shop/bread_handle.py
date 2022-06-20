@@ -37,7 +37,7 @@ class BreadDataManage:
                 self.database_path.mkdir()
                 self.database_path /= "bread.db"
                 self.conn = sqlite3.connect(self.database_path)
-                self.create_file()
+                self._create_file()
             else:
                 self.database_path /= "bread.db"
                 self.conn = sqlite3.connect(self.database_path)
@@ -47,7 +47,7 @@ class BreadDataManage:
         self.conn.close()
         print("数据库关闭！")
 
-    def create_file(self):
+    def _create_file(self):
         c = self.conn.cursor()
         c.execute('''CREATE TABLE BREAD_DATA
                            (NO            INTEGER PRIMARY KEY UNIQUE,
@@ -79,7 +79,7 @@ class BreadDataManage:
         result = cur.fetchall()
         return len(result) + 1
 
-    def create_user(self, user_id: str):
+    def _create_user(self, user_id: str):
         new_id = self._get_id()
         c = self.conn.cursor()
         c.execute(f"INSERT INTO BREAD_DATA (NO,USERID,BREAD_NUM,BREAD_EATEN) VALUES ({new_id},'{user_id}',0,0)")
@@ -89,6 +89,14 @@ class BreadDataManage:
                   f" VALUES ('{user_id}',0,0,0,0,0)")
         self.conn.commit()
 
+    def cd_refresh(self, user_id, action: Action):
+        if not isinstance(action, Action):
+            raise KeyError("the parameter operate must be Operate")
+        op_key = ("BUY_CD", "EAT_CD", "ROB_CD", "GIVE_CD", "BET_CD")[action.value]
+        cur = self.conn.cursor()
+        cur.execute(f"update BREAD_DATA set {op_key}={1} where USER_ID={user_id}")
+        self.conn.commit()
+
     def get_cd_stamp(self, user_id, operate: Action):
         if not isinstance(operate, Action):
             raise KeyError("the parameter operate must be Operate")
@@ -96,7 +104,7 @@ class BreadDataManage:
         cur.execute(f"select * from BREAD_CD where USERID={user_id}")
         result = cur.fetchone()
         if not result:
-            self.create_user(user_id)
+            self._create_user(user_id)
             result = (user_id, 0, 0, 0, 0, 0)
         self.conn.commit()
         return result[operate.value + 1]
@@ -115,7 +123,7 @@ class BreadDataManage:
         cur.execute(f"select * from BREAD_DATA where USERID='{user_id}'")
         data = cur.fetchone()
         if not data:
-            self.create_user(user_id)
+            self._create_user(user_id)
             data = (0, user_id, 0, 0, 0, 0)
         if col_name == "BREAD_EATEN":
             ori_num = data[3]
@@ -131,7 +139,7 @@ class BreadDataManage:
         cur.execute(f"select * from BREAD_DATA where USERID='{user_id}'")
         data = cur.fetchone()
         if not data:
-            self.create_user(user_id)
+            self._create_user(user_id)
             data = (0, user_id, 0, 0, 0, 0)
         if col_name == "BREAD_EATEN":
             ori_num = data[3]
@@ -186,6 +194,14 @@ class BreadDataManage:
         data = cur.fetchall()
         self.conn.commit()
         return [BreadData(*item) for item in data]
+
+    def ban_user_action(self, user_id, action: Action, ban_time):
+        if not isinstance(action, Action):
+            raise KeyError("the parameter operate must be Operate")
+        op_key = ("BUY_CD", "EAT_CD", "ROB_CD", "GIVE_CD", "BET_CD")[action.value]
+        cur = self.conn.cursor()
+        cur.execute(f"update BREAD_DATA set {op_key}={int(time.time()) + ban_time} where USER_ID={user_id}")
+        self.conn.commit()
 
 
 if __name__ == "__main__":

@@ -2,32 +2,8 @@
 # -*- coding:utf-8 -*-
 import time
 import random
-from enum import Enum
 from .bread_handle import BreadDataManage, Action, BreadData
-
-
-class CD(Enum):
-    BUY = 3600
-    EAT = 4200
-    ROB = 5400
-    GIVE = 5400
-    BET = 4800
-
-
-class MAX(Enum):
-    BUY = 10
-    EAT = 6
-    ROB = 7
-    GIVE = 10
-    BET = 10
-
-
-class MIN(Enum):
-    BUY = 1
-    EAT = 1
-    ROB = 1
-    GIVE = 1
-    BET = 5
+from .config import MAX, MIN, CD
 
 
 def cd_wait_time(group_id, user_id, operate: Action) -> int:
@@ -62,9 +38,9 @@ class _Event:
         self._event_list.extend(func_list)
 
     def _special_event(self):
-        random.shuffle(self._event_list)
+        self._event_list.sort(key=lambda x: (x[0], random.random()))
         for event_func in self._event_list:
-            return_data = event_func(self)
+            return_data = event_func[1](self)
             if return_data:
                 return return_data
 
@@ -174,4 +150,8 @@ class Give(_Event):
                       f"{self.given_name}有{new_bread_num_given}个面包！"
         self.bread_db.update_cd_stamp(self.user_id, Action.GIVE)
         return append_text
+
+
+class Bet(_Event):
+    pass
 
