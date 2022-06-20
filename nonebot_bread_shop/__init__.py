@@ -5,30 +5,35 @@ import time
 import re
 
 from nonebot import on_command
-from nonebot.params import CommandArg
+from nonebot.matcher import Matcher
+from nonebot.params import CommandArg, Arg, ArgPlainText
 from nonebot.adapters.onebot.v11 import Bot, Event, Message
+from nonebot.adapters import Message as Message2
 
 from .bread_handle import BreadDataManage, Action
 from .bread_operate import *
-from .bread_event import rob_events, buy_events, eat_events, give_events
+from .bread_event import rob_events, buy_events, eat_events, give_events, bet_events
 
 
 bread_buy = on_command("bread_buy", aliases={"买面包", "buy", "🍞"}, priority=5)
 bread_eat = on_command("bread_eat", aliases={"吃面包", "啃面包", "eat", "🍞🍞"}, priority=5)
 bread_rob = on_command("bread_rob", aliases={"抢面包", "rob", "🍞🍞🍞"}, priority=5)
 bread_give = on_command("bread_give", aliases={"送面包", "give", "送"}, priority=5)
-bread_top = on_command("bread_top", aliases={"面包排行", "breadtop"}, priority=5)
+bread_bet = on_command("bread_bet", aliases={"面包猜拳", "赌面包", "bet"}, priority=5)
+bread_top = on_command("bread_top", aliases={"面包排行", "breadtop", "面包排名"}, priority=5)
 
 
 EAT_EVENT = Eat()
 BUY_EVENT = Buy()
 ROB_EVENT = Rob()
 GIVE_EVENT = Give()
+BET_EVENT = Bet()
 
 EAT_EVENT.add_events(eat_events)
 BUY_EVENT.add_events(buy_events)
 ROB_EVENT.add_events(rob_events)
 GIVE_EVENT.add_events(give_events)
+BET_EVENT.add_events(bet_events)
 
 
 @bread_buy.handle()
@@ -134,6 +139,43 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg()):
 
     res_msg = msg_at + msg_txt
     await bot.send(event=event, message=res_msg)
+
+
+@bread_bet.handle()
+async def _(bot: Bot, event: Event, args: Message = CommandArg()):
+    user_qq = event.get_user_id()
+    msg_at = Message(f"[CQ:at,qq={user_qq}]")
+    group_id = await get_group_id(event.get_session_id())
+
+    wait_time = cd_wait_time(group_id, user_qq, Action.BET)
+    if wait_time > 0:
+        msg_txt = f"您还得等待{wait_time // 60}分钟才能送面包w"
+        await bot.send(event=event, message=msg_at + msg_txt)
+        return
+    elif wait_time < 0:
+        msg_txt = f"你被禁止猜拳啦！{(abs(wait_time)+ CD.GIVE.value) // 60}分钟后才能猜拳哦！"
+        await bot.send(event=event, message=msg_at + msg_txt)
+        return
+    else:
+        ges = args.extract_plain_text()
+
+        if ges not in ["石头", "剪刀", "布"]:
+            await bot.send(event=event, message=f"没有{ges}这种东西啦！请输入“石头”或“剪刀”或“布”！例如 ’/bet 石头‘ ")
+            return
+        if ges == "石头":
+            ges_ = Bet.G(0)
+        elif ges == "布":
+            ges_ = Bet.G(1)
+        else:
+            ges_ = Bet.G(2)
+
+        BET_EVENT.set_group_id(group_id)
+        BET_EVENT.set_user_id(user_qq)
+        BET_EVENT.set_user_gestures(ges_)
+        msg_txt = BET_EVENT.execute()
+
+        res_msg = msg_at + msg_txt
+        await bread_bet.finish(res_msg)
 
 
 @bread_top.handle()

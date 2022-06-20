@@ -11,6 +11,7 @@ rob_events = []
 eat_events = []
 buy_events = []
 give_events = []
+bet_events = []
 
 
 def probability(value, action: Action, *, priority: int = 5):

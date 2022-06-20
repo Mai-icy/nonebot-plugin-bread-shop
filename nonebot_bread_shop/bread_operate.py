@@ -4,6 +4,7 @@ import time
 import random
 from .bread_handle import BreadDataManage, Action, BreadData
 from .config import MAX, MIN, CD
+from enum import Enum
 
 
 def cd_wait_time(group_id, user_id, operate: Action) -> int:
@@ -153,5 +154,48 @@ class Give(_Event):
 
 
 class Bet(_Event):
-    pass
+    class G(Enum):
+        ROCK = 0
+        PAPER = 1
+        SCISSORS = 2
+
+    def __init__(self):
+        super().__init__()
+        self.user_gestures = None
+
+    def set_user_gestures(self, ges: G):
+        self.user_gestures = ges
+
+    def execute(self):
+        if self.user_data.bread_num < MIN.BET.value:
+            append_text = f"你的面包还不够猜拳w，来买一些面包吧！"
+            return append_text
+
+        return_data = self._special_event()
+        if return_data:
+            return return_data
+
+        if self.user_data.bread_num < MAX.BET.value:
+            bet_num = random.randint(MIN.BET.value, self.user_data.bread_num)
+        else:
+            bet_num = random.randint(MIN.BET.value, MAX.BET.value)
+
+        bot_ges = self.G(random.randint(0, 2))
+        bot_ges_text = ("石头", "布", "剪刀")[bot_ges.value]
+
+        val = self.user_gestures.value - bot_ges.value
+        if val == 1 or val == -2:
+            new_bread_num_user = self.bread_db.add_bread(self.user_id, bet_num)
+            self.bread_db.update_no(self.user_id)
+            append_text = f"{bot_ges_text}! 啊，我输了，给你{bet_num}个面包！你现在拥有{new_bread_num_user}个面包！"
+        elif val == 0:
+            append_text = f"{bot_ges_text}!平局啦！面包都还给你啦！"
+        else:
+            new_bread_num_user = self.bread_db.reduce_bread(self.user_id, bet_num)
+            self.bread_db.update_no(self.user_id)
+            append_text = f"{bot_ges_text}!嘿嘿，我赢啦！你的{bet_num}个面包归我了！你现在拥有{new_bread_num_user}个面包！"
+
+        self.bread_db.update_cd_stamp(self.user_id, Action.BET)
+        return append_text
+
 
