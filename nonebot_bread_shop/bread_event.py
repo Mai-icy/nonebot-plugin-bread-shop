@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 import random
 from .bread_handle import Action
-from .bread_operate import Rob, Eat, Buy
+from .bread_operate import Rob, Eat, Buy, Give, Bet, random_get
 from .config import MIN, MAX, CD
 from functools import wraps
 
@@ -22,18 +22,22 @@ def probability(value, action: Action, *, priority: int = 5):
                 return func(*args, **kwargs)
             else:
                 return None
-        event_list = (buy_events, eat_events, rob_events, give_events)[action.value]
+        event_list = (buy_events, eat_events, rob_events, give_events, bet_events)[action.value]
         event_list.append((priority, inner))
         return inner
     return wrapper
 
 
+@probability(0.05, Action.ROB, priority=5)
+def bet_event_police(event: Rob):
+    append_text = f"你抢面包被警察抓住了！你真的太坏了！下次抢面包时间多等40min！"
+    event.bread_db.ban_user_action(event.user_id, Action.BET, 2400)
+    return append_text
+
+
 @probability(0.09, Action.ROB, priority=5)
 def rob_event_fail(event: Rob):
-    if event.user_data.bread_num < MAX.ROB.value:
-        loss_num = random.randint(0, event.user_data.bread_num)
-    else:
-        loss_num = random.randint(MIN.ROB.value, MAX.ROB.value)
+    loss_num = random_get(0, MAX.ROB.value, event.user_data.bread_num)
     new_bread_num = event.bread_db.reduce_bread(event.user_id, loss_num)
     event.bread_db.update_no(event.user_id)
     append_text = f"抢面包失败啦！被{event.robbed_name}反击，你丢失{loss_num}个面包！你现在拥有{new_bread_num}个面包！"
@@ -63,7 +67,7 @@ def buy_event_poverty_relief(event: Buy):
     return append_text
 
 
-@probability(0.8, Action.BUY, priority=5)
+@probability(0.8, Action.BUY, priority=4)
 def buy_event_too_much(event: Buy):
     if event.user_data.bread_num < 90:
         return
@@ -71,26 +75,66 @@ def buy_event_too_much(event: Buy):
     return append_text
 
 
-@probability(0.4, Action.EAT, priority=5)
+@probability(0.2, Action.EAT, priority=5)
 def eat_event_not_enough(event: Eat):
-    if event.user_data.bread_num < MAX.EAT.value:
-        eat_num = random.randint(MIN.EAT.value, event.user_data.bread_num)
-    else:
-        eat_num = random.randint(MIN.EAT.value, MAX.EAT.value)
-    now_bread = event.bread_db.reduce_bread(event.user_id, eat_num)
-    eaten_bread = event.bread_db.add_bread(event.user_id, eat_num, "BREAD_EATEN")
-
-    if eat_num < 3:
-        append_text = f"成功吃掉了{eat_num}个面包w！还是好饿，还可以继续吃！"
-    else:
-        append_text = f"成功吃掉了{eat_num}个面包w！现在你还剩{now_bread}个面包w！您目前的等级为Lv.{eaten_bread // 10}"
-        event.bread_db.update_cd_stamp(event.user_id, Action.EAT)
+    eat_num = random_get(MIN.EAT.value, MIN.EAT.value + 3, event.user_data.bread_num)
+    event.bread_db.reduce_bread(event.user_id, eat_num)
+    event.bread_db.add_bread(event.user_id, eat_num, "BREAD_EATEN")
+    append_text = f"成功吃掉了{eat_num}个面包w！还是好饿，还可以继续吃！"
     event.bread_db.update_no(event.user_id)
     return append_text
 
 
+@probability(0.1, Action.EAT, priority=5)
+def eat_event_much(event: Eat):
+    if event.user_data.bread_num <= MAX.EAT.value:
+        return
+    eat_num = random_get(MAX.EAT.value, MAX.EAT.value * 2, event.user_data.bread_num)
+    event.bread_db.reduce_bread(event.user_id, eat_num)
+    event.bread_db.add_bread(event.user_id, eat_num, "BREAD_EATEN")
+    append_text = f"成功吃掉了{eat_num}个面包w！吃太多啦，撑死了，下次吃多等30分钟！"
+    event.bread_db.update_no(event.user_id)
+    event.bread_db.ban_user_action(event.user_id, Action.EAT, 1800)
+    return append_text
 
 
+@probability(0.02, Action.EAT, priority=5)
+def eat_event_much(event: Eat):
+    eat_num = random_get(MIN.EAT.value, MAX.EAT.value, event.user_data.bread_num)
+    event.bread_db.reduce_bread(event.user_id, eat_num)
+    event.bread_db.add_bread(event.user_id, eat_num, "BREAD_EATEN")
+    append_text = f"成功吃掉了{eat_num}个面包w！有个面包超好吃！让你心情舒爽！所有操作刷新！"
+    event.bread_db.update_no(event.user_id)
+
+    event.bread_db.cd_refresh(event.user_id, Action.EAT)
+    event.bread_db.cd_refresh(event.user_id, Action.BET)
+    event.bread_db.cd_refresh(event.user_id, Action.BUY)
+    event.bread_db.cd_refresh(event.user_id, Action.ROB)
+    event.bread_db.cd_refresh(event.user_id, Action.GIVE)
+
+    return append_text
+
+
+@probability(0.1, Action.GIVE, priority=5)
+def give_event_commission(event: Give):
+    if event.user_data.bread_num <= MAX.GIVE.value * 2:
+        return
+    give_num = random_get(MAX.GIVE.value, MAX.GIVE.value * 2, event.user_data.bread_num)
+    give_bot = give_num // 2
+    user_num = event.bread_db.reduce_bread(event.user_id, give_num)
+    event.bread_db.add_bread(event.given_id, give_num - give_bot)
+    append_text = f"哇！这么多面包，你送了{give_num - give_bot}个给{event.given_name}！" \
+                  f"再给我{give_bot}吧嘿嘿！你现在有{user_num}个面包！"
+    event.bread_db.update_no(event.user_id)
+    event.bread_db.update_no(event.given_id)
+    return append_text
+
+
+@probability(0.05, Action.BET, priority=5)
+def bet_event_police(event: Bet):
+    append_text = f"你赌面包被警察抓住了！你不赌，我不赌，和谐幸福跟我走！下次赌面包时间多等40min！"
+    event.bread_db.ban_user_action(event.user_id, Action.BET, 2400)
+    return append_text
 
 
 

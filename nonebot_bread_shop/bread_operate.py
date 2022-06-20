@@ -15,13 +15,22 @@ def cd_wait_time(group_id, user_id, operate: Action) -> int:
     return cd.value - sep_time if sep_time < cd.value else 0
 
 
+def random_get(min_num, max_num, have_num=-1):
+    """当最大值超出用户原有量，找到合适的随机值"""
+    if have_num < max_num and have_num != -1:
+        num = random.randint(min_num, have_num)
+    else:
+        num = random.randint(min_num, max_num)
+    return num
+
+
 class _Event:
 
     def __init__(self):
         self.group_id = None
         self.user_id = None
         self.user_data = BreadData(0, "0", 0, 0)
-        self.bread_db = None
+        self.bread_db: BreadDataManage = BreadDataManage("default")
         self._event_list = []
 
     def set_group_id(self, group_id: str):

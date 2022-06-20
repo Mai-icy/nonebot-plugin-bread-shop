@@ -4,11 +4,11 @@ from enum import Enum
 
 
 class CD(Enum):
-    BUY = 4800
-    EAT = 5400
-    ROB = 7600
-    GIVE = 3600
-    BET = 6000
+    BUY = 4200
+    EAT = 4800
+    ROB = 7000
+    GIVE = 3000
+    BET = 5400
 
 
 class MAX(Enum):
