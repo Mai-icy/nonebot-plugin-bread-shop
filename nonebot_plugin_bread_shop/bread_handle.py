@@ -4,6 +4,7 @@ import sqlite3
 import time
 from enum import Enum
 from pathlib import Path
+from typing import List
 from collections import namedtuple
 
 DATABASE = Path() / "data" / "bread"
@@ -23,6 +24,9 @@ BreadData = namedtuple("BreadData", ["no", "user_id", "bread_num", "bread_eaten"
 class BreadDataManage:
     _instance = {}
     _has_init = {}
+    CD_COLUMN = ("BUY_CD", "EAT_CD", "ROB_CD", "GIVE_CD", "BET_CD")
+    DATA_COLUMN = ("BREAD_NUM", "BREAD_EATEN")
+    LOG_COLUMN = ("BUY_TIMES", "EAT_TIMES", "ROB_TIMES", "GIVE_TIMES", "BET_TIMES")
 
     def __new__(cls, group_id):
         if group_id is None:
@@ -49,7 +53,8 @@ class BreadDataManage:
         self.conn.close()
         print("数据库关闭！")
 
-    def _create_file(self):
+    def _create_file(self) -> None:
+        """创建数据库文件"""
         c = self.conn.cursor()
         c.execute('''CREATE TABLE BREAD_DATA
                            (NO            INTEGER PRIMARY KEY UNIQUE,
@@ -75,13 +80,15 @@ class BreadDataManage:
                            );''')
         self.conn.commit()
 
-    def _get_id(self):
+    def _get_id(self) -> int:
+        """获取下一个id"""
         cur = self.conn.cursor()
         cur.execute('select * from BREAD_DATA')
         result = cur.fetchall()
         return len(result) + 1
 
-    def _create_user(self, user_id: str):
+    def _create_user(self, user_id: str) -> None:
+        """在数据库中创建用户并初始化"""
         new_id = self._get_id()
         c = self.conn.cursor()
         c.execute(f"INSERT INTO BREAD_DATA (NO,USERID,BREAD_NUM,BREAD_EATEN) VALUES ({new_id},'{user_id}',0,0)")
@@ -91,16 +98,18 @@ class BreadDataManage:
                   f" VALUES ('{user_id}',0,0,0,0,0)")
         self.conn.commit()
 
-    def cd_refresh(self, user_id, action: Action):
+    def cd_refresh(self, user_id: str, action: Action) -> None:
+        """刷新用户操作cd"""
         if not isinstance(action, Action):
             raise KeyError("the parameter operate must be Operate")
-        op_key = ("BUY_CD", "EAT_CD", "ROB_CD", "GIVE_CD", "BET_CD")[action.value]
+        op_key = self.CD_COLUMN[action.value]
         cur = self.conn.cursor()
-        cur.execute(f"update BREAD_DATA set {op_key}={1} where USER_ID={user_id}")
+        cur.execute(f"update BREAD_DATA set {op_key}={1} where USER_ID='{user_id}'")
         self.conn.commit()
 
-    def get_cd_stamp(self, user_id, operate: Action):
-        if not isinstance(operate, Action):
+    def cd_get_stamp(self, user_id: str, action: Action) -> int:
+        """获取用户上次操作时间戳"""
+        if not isinstance(action, Action):
             raise KeyError("the parameter operate must be Operate")
         cur = self.conn.cursor()
         cur.execute(f"select * from BREAD_CD where USERID={user_id}")
@@ -109,25 +118,40 @@ class BreadDataManage:
             self._create_user(user_id)
             result = (user_id, 0, 0, 0, 0, 0)
         self.conn.commit()
-        return result[operate.value + 1]
+        return result[action.value + 1]
 
-    def update_cd_stamp(self, user_id, operate: Action):
-        if not isinstance(operate, Action):
+    def cd_ban_action(self, user_id: str, action: Action, ban_time) -> None:
+        """禁止用户一段时间操作，单次延长cd，单位为秒"""
+        if not isinstance(action, Action):
             raise KeyError("the parameter operate must be Operate")
-        op_key = ("BUY_CD", "EAT_CD", "ROB_CD", "GIVE_CD", "BET_CD")[operate.value]
+        op_key = self.CD_COLUMN[action.value]
+        cur = self.conn.cursor()
+        cur.execute(f"update BREAD_DATA set {op_key}={int(time.time()) + ban_time} where USERID={user_id}")
+        self.conn.commit()
+
+    def cd_update_stamp(self, user_id: str, action: Action) -> None:
+        """重置用户操作CD(重新开始记录冷却)"""
+        if not isinstance(action, Action):
+            raise KeyError("the parameter operate must be Operate")
+        op_key = self.CD_COLUMN[action.value]
         stamp = int(time.time())
         cur = self.conn.cursor()
         cur.execute(f"update BREAD_CD set {op_key}={stamp} where USERID='{user_id}'")
         self.conn.commit()
 
-    def add_bread(self, user_id, add_num, col_name="BREAD_NUM"):
+    def add_bread(self, user_id: str, add_num: int, action: Action = Action.BUY) -> int:
+        """添加用户面包数量，可以添加已经吃了的面包数量，返回增加后的数量"""
+        if action == Action.EAT:
+            col_name = self.DATA_COLUMN[0]
+        else:
+            col_name = self.DATA_COLUMN[1]
         cur = self.conn.cursor()
         cur.execute(f"select * from BREAD_DATA where USERID='{user_id}'")
         data = cur.fetchone()
         if not data:
             self._create_user(user_id)
             data = (0, user_id, 0, 0, 0, 0)
-        if col_name == "BREAD_EATEN":
+        if col_name == self.DATA_COLUMN[1]:
             ori_num = data[3]
         else:
             ori_num = data[2]
@@ -136,7 +160,12 @@ class BreadDataManage:
         self.conn.commit()
         return new_num
 
-    def reduce_bread(self, user_id, red_num, col_name="BREAD_NUM"):
+    def reduce_bread(self, user_id: str, red_num: int, action: Action = Action.BUY) -> int:
+        """减少用户面包数量，可以减少已经吃的数量，返回减少后的数量"""
+        if action == Action.EAT:
+            col_name = self.DATA_COLUMN[0]
+        else:
+            col_name = self.DATA_COLUMN[1]
         cur = self.conn.cursor()
         cur.execute(f"select * from BREAD_DATA where USERID='{user_id}'")
         data = cur.fetchone()
@@ -152,7 +181,8 @@ class BreadDataManage:
         self.conn.commit()
         return new_num
 
-    def update_no(self, user_id):
+    def update_no(self, user_id: str) -> int:
+        """更新用户排名并返回"""
         cur = self.conn.cursor()
         cur.execute(f"select * from BREAD_DATA where USERID='{user_id}'")
         data = cur.fetchone()
@@ -183,32 +213,27 @@ class BreadDataManage:
         self.conn.commit()
         return now_no
 
-    def get_bread_data(self, user_id):
+    def get_bread_data(self, user_id: str) -> BreadData:
+        """获取用户面包数据并返回"""
         cur = self.conn.cursor()
         cur.execute(f"select * from BREAD_DATA where USERID='{user_id}'")
         data = cur.fetchone()
         self.conn.commit()
         return BreadData(*data)
 
-    def get_all_data(self):
+    def get_all_data(self) -> List[BreadData]:
+        """获取一个数据库内的所有用户数据"""
         cur = self.conn.cursor()
         cur.execute(f"select * from BREAD_DATA")
         data = cur.fetchall()
         self.conn.commit()
         return [BreadData(*item) for item in data]
 
-    def ban_user_action(self, user_id, action: Action, ban_time):
+    def log_user_action(self, user_id: str, action: Action) -> int:
+        """记录用户操作次数递增1并返回"""
         if not isinstance(action, Action):
             raise KeyError("the parameter operate must be Operate")
-        op_key = ("BUY_CD", "EAT_CD", "ROB_CD", "GIVE_CD", "BET_CD")[action.value]
-        cur = self.conn.cursor()
-        cur.execute(f"update BREAD_DATA set {op_key}={int(time.time()) + ban_time} where USERID={user_id}")
-        self.conn.commit()
-
-    def log_user_action(self, user_id, action: Action):
-        if not isinstance(action, Action):
-            raise KeyError("the parameter operate must be Operate")
-        op_key = ("BUY_TIMES", "EAT_TIMES", "ROB_TIMES", "GIVE_TIMES", "BET_TIMES")[action.value]
+        op_key = self.LOG_COLUMN[action.value]
         cur = self.conn.cursor()
         cur.execute(f"select * from BREAD_LOG where USERID='{user_id}'")
         data = cur.fetchone()
@@ -221,22 +246,4 @@ class BreadDataManage:
 
 if __name__ == "__main__":
     DATABASE = Path() / ".." / ".." / ".." / "data" / "bread"
-    a = BreadDataManage("893015705")
-
-    print(a.get_bread_data("244095602"))
-    # print(a.add_bread("244095603", 11))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    pass
