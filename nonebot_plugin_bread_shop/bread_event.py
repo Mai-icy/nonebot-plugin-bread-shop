@@ -82,6 +82,15 @@ def eat_event_much(event: Eat):
     return append_text
 
 
+@probability(0.07, Action.EAT, priority=5)
+def eat_event_steal(event: Eat):
+    eat_num = random.randint(MIN.EAT.value, min(MAX.EAT.value, event.user_data.bread_num))
+    event.bread_db.reduce_bread(event.user_id, eat_num)
+    append_text = f"你吃面包被我发现了！我好饿，我帮你吃吧！吃了你{eat_num}个面包！"
+    event.bread_db.update_no(event.user_id)
+    return append_text
+
+
 @probability(0.02, Action.EAT, priority=5)
 def eat_event_good(event: Eat):
     eat_num = random.randint(MIN.EAT.value, min(MAX.EAT.value, event.user_data.bread_num))
@@ -138,6 +147,16 @@ def give_event_commission(event: Give):
     append_text = f"哇！这么多面包，你送了{give_num - give_bot}个给{event.given_name}！" \
                   f"再给我{give_bot}吧嘿嘿！你现在有{user_num}个面包！"
     event.bread_db.update_no(event.user_id)
+    event.bread_db.update_no(event.given_id)
+    event.bread_db.cd_update_stamp(event.user_id, Action.GIVE)
+    return append_text
+
+
+@probability(0.1, Action.GIVE, priority=5)
+def give_event_lossless(event: Give):
+    give_num = random.randint(MIN.GIVE.value, min(MAX.GIVE.value, event.user_data.bread_num))
+    event.bread_db.add_bread(event.given_id, give_num)
+    append_text = f"看在你如此善良的份上，我帮你送吧！送了{give_num}给{event.given_name}，你不损失面包！"
     event.bread_db.update_no(event.given_id)
     event.bread_db.cd_update_stamp(event.user_id, Action.GIVE)
     return append_text
