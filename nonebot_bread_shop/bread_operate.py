@@ -15,22 +15,13 @@ def cd_wait_time(group_id, user_id, operate: Action) -> int:
     return cd.value - sep_time if sep_time < cd.value else 0
 
 
-def random_get(min_num, max_num, have_num=-1):
-    """当最大值超出用户原有量，找到合适的随机值"""
-    if have_num < max_num and have_num != -1:
-        num = random.randint(min_num, have_num)
-    else:
-        num = random.randint(min_num, max_num)
-    return num
-
-
 class _Event:
 
     def __init__(self):
         self.group_id = None
         self.user_id = None
         self.user_data = BreadData(0, "0", 0, 0)
-        self.bread_db: BreadDataManage = BreadDataManage("default")
+        self.bread_db = BreadDataManage(None)
         self._event_list = []
 
     def set_group_id(self, group_id: str):
@@ -57,6 +48,8 @@ class _Event:
 
 class Buy(_Event):
     def execute(self):
+        self.bread_db.log_user_action(self.user_id, Action.BUY)
+
         return_data = self._special_event()
         if return_data:
             return return_data
@@ -71,6 +64,8 @@ class Buy(_Event):
 
 class Eat(_Event):
     def execute(self):
+        self.bread_db.log_user_action(self.user_id, Action.EAT)
+
         if self.user_data.bread_num < MIN.EAT.value:
             append_text = f"你的面包还不够吃w，来买一些面包吧！"
             return append_text
@@ -79,10 +74,7 @@ class Eat(_Event):
         if return_data:
             return return_data
 
-        if self.user_data.bread_num < MAX.EAT.value:
-            eat_num = random.randint(MIN.EAT.value, self.user_data.bread_num)
-        else:
-            eat_num = random.randint(MIN.EAT.value, MAX.EAT.value)
+        eat_num = random.randint(MIN.EAT.value, min(MAX.EAT.value, self.user_data.bread_num))
         now_bread = self.bread_db.reduce_bread(self.user_id, eat_num)
         eaten_bread = self.bread_db.add_bread(self.user_id, eat_num, "BREAD_EATEN")
         append_text = f"成功吃掉了{eat_num}个面包w！现在你还剩{now_bread}个面包w！您目前的等级为Lv.{eaten_bread // 10}"
@@ -104,6 +96,8 @@ class Rob(_Event):
         self.robbed_data = self.bread_db.get_bread_data(robbed_id)
 
     def execute(self):
+        self.bread_db.log_user_action(self.user_id, Action.ROB)
+
         if not self.robbed_data or self.robbed_data.bread_num < MIN.ROB.value:
             append_text = f"{self.robbed_name}没有面包可抢呜"
             return append_text
@@ -112,10 +106,7 @@ class Rob(_Event):
         if return_data:
             return return_data
 
-        if self.robbed_data.bread_num < MAX.ROB.value:
-            rob_num = random.randint(MIN.ROB.value, self.robbed_data.bread_num)
-        else:
-            rob_num = random.randint(MIN.ROB.value, MAX.ROB.value)
+        rob_num = random.randint(MIN.ROB.value, min(MAX.ROB.value, self.robbed_data.bread_num))
         new_bread_num = self.bread_db.add_bread(self.user_id, rob_num)
         self.bread_db.reduce_bread(self.robbed_id, rob_num)
         new_bread_no = self.bread_db.update_no(self.user_id)
@@ -139,6 +130,8 @@ class Give(_Event):
         self.given_data = self.bread_db.get_bread_data(robbed_id)
 
     def execute(self):
+        self.bread_db.log_user_action(self.user_id, Action.GIVE)
+
         if self.user_data.bread_num < MIN.EAT.value:
             append_text = f"你的面包还不够赠送w，来买一些面包吧！"
             return append_text
@@ -147,10 +140,7 @@ class Give(_Event):
         if return_data:
             return return_data
 
-        if self.user_data.bread_num < MAX.EAT.value:
-            give_num = random.randint(MIN.GIVE.value, self.user_data.bread_num)
-        else:
-            give_num = random.randint(MIN.GIVE.value, MAX.GIVE.value)
+        give_num = random.randint(MIN.GIVE.value, min(MAX.GIVE.value, self.user_data.bread_num))
         new_bread_num_given = self.bread_db.add_bread(self.given_id, give_num)
         new_bread_num_user = self.bread_db.reduce_bread(self.user_id, give_num)
         self.bread_db.update_no(self.given_id)
@@ -176,6 +166,8 @@ class Bet(_Event):
         self.user_gestures = ges
 
     def execute(self):
+        self.bread_db.log_user_action(self.user_id, Action.BET)
+
         if self.user_data.bread_num < MIN.BET.value:
             append_text = f"你的面包还不够猜拳w，来买一些面包吧！"
             return append_text
@@ -184,10 +176,7 @@ class Bet(_Event):
         if return_data:
             return return_data
 
-        if self.user_data.bread_num < MAX.BET.value:
-            bet_num = random.randint(MIN.BET.value, self.user_data.bread_num)
-        else:
-            bet_num = random.randint(MIN.BET.value, MAX.BET.value)
+        bet_num = random.randint(MIN.BET.value, min(MAX.BET.value, self.user_data.bread_num))
 
         bot_ges = self.G(random.randint(0, 2))
         bot_ges_text = ("石头", "布", "剪刀")[bot_ges.value]

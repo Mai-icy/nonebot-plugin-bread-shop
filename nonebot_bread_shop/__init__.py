@@ -1,14 +1,11 @@
 #!/usr/bin/python
 # -*- coding:utf-8 -*-
-import random
-import time
+
 import re
 
 from nonebot import on_command
-from nonebot.matcher import Matcher
-from nonebot.params import CommandArg, Arg, ArgPlainText
+from nonebot.params import CommandArg
 from nonebot.adapters.onebot.v11 import Bot, Event, Message
-from nonebot.adapters import Message as Message2
 
 from .bread_handle import BreadDataManage, Action
 from .bread_operate import *
@@ -20,6 +17,8 @@ bread_eat = on_command("bread_eat", aliases={"吃面包", "啃面包", "eat", "�
 bread_rob = on_command("bread_rob", aliases={"抢面包", "rob", "🍞🍞🍞"}, priority=5)
 bread_give = on_command("bread_give", aliases={"送面包", "give", "送"}, priority=5)
 bread_bet = on_command("bread_bet", aliases={"面包猜拳", "赌面包", "bet"}, priority=5)
+
+bread_my = on_command("bread_my", aliases={"我的面包", "查看面包"}, priority=5)
 bread_top = on_command("bread_top", aliases={"面包排行", "breadtop", "面包排名"}, priority=5)
 
 
@@ -149,7 +148,7 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg()):
 
     wait_time = cd_wait_time(group_id, user_qq, Action.BET)
     if wait_time > 0:
-        msg_txt = f"您还得等待{wait_time // 60}分钟才能送面包w"
+        msg_txt = f"您还得等待{wait_time // 60}分钟才能猜拳w"
         await bot.send(event=event, message=msg_at + msg_txt)
         return
     elif wait_time < 0:

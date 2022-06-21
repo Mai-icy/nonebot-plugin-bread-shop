@@ -25,6 +25,8 @@ class BreadDataManage:
     _has_init = {}
 
     def __new__(cls, group_id):
+        if group_id is None:
+            return None
         if cls._instance.get(group_id) is None:
             cls._instance[group_id] = super(BreadDataManage, cls).__new__(cls)
         return cls._instance[group_id]
@@ -200,8 +202,21 @@ class BreadDataManage:
             raise KeyError("the parameter operate must be Operate")
         op_key = ("BUY_CD", "EAT_CD", "ROB_CD", "GIVE_CD", "BET_CD")[action.value]
         cur = self.conn.cursor()
-        cur.execute(f"update BREAD_DATA set {op_key}={int(time.time()) + ban_time} where USER_ID={user_id}")
+        cur.execute(f"update BREAD_DATA set {op_key}={int(time.time()) + ban_time} where USERID={user_id}")
         self.conn.commit()
+
+    def log_user_action(self, user_id, action: Action):
+        if not isinstance(action, Action):
+            raise KeyError("the parameter operate must be Operate")
+        op_key = ("BUY_TIMES", "EAT_TIMES", "ROB_TIMES", "GIVE_TIMES", "BET_TIMES")[action.value]
+        cur = self.conn.cursor()
+        cur.execute(f"select * from BREAD_LOG where USERID='{user_id}'")
+        data = cur.fetchone()
+        log_times = data[action.value + 1]
+        log_times += 1
+        cur.execute(f"update BREAD_LOG set {op_key}={log_times} where USERID={user_id}")
+        self.conn.commit()
+        return log_times
 
 
 if __name__ == "__main__":
