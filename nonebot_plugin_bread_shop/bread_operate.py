@@ -197,5 +197,3 @@ class Bet(_Event):
             append_text = f"{bot_ges_text}!嘿嘿，我赢啦！你的{bet_num}个面包归我了！你现在拥有{new_bread_num_user}个面包！"
             self.bread_db.cd_update_stamp(self.user_id, Action.BET)
         return append_text
-
-
