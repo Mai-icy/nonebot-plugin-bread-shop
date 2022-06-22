@@ -104,7 +104,7 @@ class BreadDataManage:
             raise KeyError("the parameter operate must be Operate")
         op_key = self.CD_COLUMN[action.value]
         cur = self.conn.cursor()
-        cur.execute(f"update BREAD_DATA set {op_key}={1} where USER_ID='{user_id}'")
+        cur.execute(f"update BREAD_CD set {op_key}={1} where USER_ID='{user_id}'")
         self.conn.commit()
 
     def cd_get_stamp(self, user_id: str, action: Action) -> int:
@@ -126,7 +126,7 @@ class BreadDataManage:
             raise KeyError("the parameter operate must be Operate")
         op_key = self.CD_COLUMN[action.value]
         cur = self.conn.cursor()
-        cur.execute(f"update BREAD_DATA set {op_key}={int(time.time()) + ban_time} where USERID={user_id}")
+        cur.execute(f"update BREAD_CD set {op_key}={int(time.time()) + ban_time} where USERID={user_id}")
         self.conn.commit()
 
     def cd_update_stamp(self, user_id: str, action: Action) -> None:
