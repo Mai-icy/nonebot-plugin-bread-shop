@@ -2,7 +2,7 @@
 <a href="./LICENSE">
     <img src="https://img.shields.io/github/license/Mai-icy/nonebot-plugin-bread-shop.svg" alt="license">
 </a><img src="https://img.shields.io/badge/python-3.7+-blue.svg" alt="python">
-[![OSCS Status](https://www.oscs1024.com/platform/badge/Mai-icy/nonebot-plugin-bread-shop.svg?size=small)](https://www.oscs1024.com/project/Mai-icy/nonebot-plugin-bread-shop?ref=badge_small)
+<a href="https://www.oscs1024.com/project/oscs/Mai-icy/nonebot-plugin-bread-shop?ref=badge_small" alt="OSCS Status"><img src="https://www.oscs1024.com/platform/badge/Mai-icy/nonebot-plugin-bread-shop.svg?size=small"/></a>
 
 ## ⚠️警告须知！
 
