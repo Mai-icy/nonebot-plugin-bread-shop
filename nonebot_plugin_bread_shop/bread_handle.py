@@ -142,9 +142,9 @@ class BreadDataManage:
     def add_bread(self, user_id: str, add_num: int, action: Action = Action.BUY) -> int:
         """添加用户面包数量，可以添加已经吃了的面包数量，返回增加后的数量"""
         if action == Action.EAT:
-            col_name = self.DATA_COLUMN[0]
-        else:
             col_name = self.DATA_COLUMN[1]
+        else:
+            col_name = self.DATA_COLUMN[0]
         cur = self.conn.cursor()
         cur.execute(f"select * from BREAD_DATA where USERID='{user_id}'")
         data = cur.fetchone()
