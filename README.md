@@ -2,6 +2,7 @@
 <a href="./LICENSE">
     <img src="https://img.shields.io/github/license/Mai-icy/nonebot-plugin-bread-shop.svg" alt="license">
 </a><img src="https://img.shields.io/badge/python-3.7+-blue.svg" alt="python">
+[![OSCS Status](https://www.oscs1024.com/platform/badge/Mai-icy/nonebot-plugin-bread-shop.svg?size=small)](https://www.oscs1024.com/project/Mai-icy/nonebot-plugin-bread-shop?ref=badge_small)
 
 ## ⚠️警告须知！
 
@@ -25,6 +26,7 @@
 | 啃面包 | 吃随机数量面包 |eat，🍞🍞，吃面包|
 | 抢面包 + @指定用户 | 抢指定用户随机数量面包 |rob，🍞🍞🍞|
 | 送面包 + @指定用户 | 送指定用户随机数量面包 |give，送|
+| 查看面包 + @指定用户 | 查看指定用户的面包数据 |偷看面包，查看面包，check|
 | 赌面包 + “石头剪刀布” | 和bot进行猜拳赌随机数量面包 |bet，面包猜拳|
 | 面包排行 | 发送本群排行榜top5 |breadtop，面包排名|
 
