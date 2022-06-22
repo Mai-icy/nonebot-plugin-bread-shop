@@ -18,7 +18,7 @@ class Action(Enum):
     BET = 4
 
 
-BreadData = namedtuple("BreadData", ["no", "user_id", "bread_num", "bread_eaten"])
+BreadData = namedtuple("BreadData", ["no", "user_id", "bread_num", "bread_eaten", "level"])
 
 
 class BreadDataManage:
@@ -219,7 +219,7 @@ class BreadDataManage:
         cur.execute(f"select * from BREAD_DATA where USERID='{user_id}'")
         data = cur.fetchone()
         self.conn.commit()
-        return BreadData(*data)
+        return BreadData(*data, level=(data[3] // 10))
 
     def get_all_data(self) -> List[BreadData]:
         """获取一个数据库内的所有用户数据"""
@@ -227,7 +227,7 @@ class BreadDataManage:
         cur.execute(f"select * from BREAD_DATA")
         data = cur.fetchall()
         self.conn.commit()
-        return [BreadData(*item) for item in data]
+        return [BreadData(*item, level=item[3] // 10) for item in data]
 
     def log_user_action(self, user_id: str, action: Action) -> int:
         """记录用户操作次数递增1并返回"""
@@ -246,4 +246,6 @@ class BreadDataManage:
 
 if __name__ == "__main__":
     DATABASE = Path() / ".." / ".." / ".." / "data" / "bread"
+    db = BreadDataManage("893015705")
+    db.reduce_bread("3061674036", 10)
     pass

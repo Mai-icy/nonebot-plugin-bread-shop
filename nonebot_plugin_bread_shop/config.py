@@ -13,7 +13,7 @@ class CD(Enum):
 
 class MAX(Enum):
     BUY = 10
-    EAT = 6
+    EAT = 7
     ROB = 7
     GIVE = 10
     BET = 10

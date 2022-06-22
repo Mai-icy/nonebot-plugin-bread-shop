@@ -21,7 +21,7 @@ class _Event:
     def __init__(self):
         self.group_id = None
         self.user_id = None
-        self.user_data = BreadData(0, "0", 0, 0)
+        self.user_data = BreadData(0, "0", 0, 0, 0)
         self.bread_db = BreadDataManage(None)
         self._event_list = []
 
@@ -47,8 +47,14 @@ class _Event:
             if return_data:
                 return return_data
 
+    def execute(self):
+        pass
 
-class Buy(_Event):
+    def normal_event(self):
+        pass
+
+
+class BuyEvent(_Event):
     def execute(self):
         self.bread_db.log_user_action(self.user_id, Action.BUY)
 
@@ -56,6 +62,9 @@ class Buy(_Event):
         if return_data:
             return return_data
 
+        return self.normal_event()
+
+    def normal_event(self):
         buy_num = random.randint(MIN.BUY.value, MAX.BUY.value)
         new_bread_num = self.bread_db.add_bread(self.user_id, buy_num)
         new_bread_no = self.bread_db.update_no(self.user_id)
@@ -64,7 +73,7 @@ class Buy(_Event):
         return append_text
 
 
-class Eat(_Event):
+class EatEvent(_Event):
     def execute(self):
         self.bread_db.log_user_action(self.user_id, Action.EAT)
 
@@ -76,6 +85,9 @@ class Eat(_Event):
         if return_data:
             return return_data
 
+        return self.normal_event()
+
+    def normal_event(self):
         eat_num = random.randint(MIN.EAT.value, min(MAX.EAT.value, self.user_data.bread_num))
         now_bread = self.bread_db.reduce_bread(self.user_id, eat_num)
         eaten_bread = self.bread_db.add_bread(self.user_id, eat_num, Action.EAT)
@@ -85,12 +97,12 @@ class Eat(_Event):
         return append_text
 
 
-class Rob(_Event):
+class RobEvent(_Event):
     def __init__(self):
         super().__init__()
         self.robbed_id = None
         self.robbed_name = None
-        self.robbed_data = BreadData(0, "0", 0, 0)
+        self.robbed_data = BreadData(0, "0", 0, 0, 0)
 
     def set_robbed_id(self, robbed_id: str, robbed_name: str):
         self.robbed_id = robbed_id
@@ -108,6 +120,9 @@ class Rob(_Event):
         if return_data:
             return return_data
 
+        return self.normal_event()
+
+    def normal_event(self):
         rob_num = random.randint(MIN.ROB.value, min(MAX.ROB.value, self.robbed_data.bread_num))
         new_bread_num = self.bread_db.add_bread(self.user_id, rob_num)
         self.bread_db.reduce_bread(self.robbed_id, rob_num)
@@ -119,12 +134,12 @@ class Rob(_Event):
         return append_text
 
 
-class Give(_Event):
+class GiveEvent(_Event):
     def __init__(self):
         super().__init__()
         self.given_id = None
         self.given_name = None
-        self.given_data = BreadData(0, "0", 0, 0)
+        self.given_data = BreadData(0, "0", 0, 0, 0)
 
     def set_given_id(self, robbed_id: str, robbed_name: str):
         self.given_id = robbed_id
@@ -141,7 +156,9 @@ class Give(_Event):
         return_data = self._special_event()
         if return_data:
             return return_data
+        return self.normal_event()
 
+    def normal_event(self):
         give_num = random.randint(MIN.GIVE.value, min(MAX.GIVE.value, self.user_data.bread_num))
         new_bread_num_given = self.bread_db.add_bread(self.given_id, give_num)
         new_bread_num_user = self.bread_db.reduce_bread(self.user_id, give_num)
@@ -154,7 +171,7 @@ class Give(_Event):
         return append_text
 
 
-class Bet(_Event):
+class BetEvent(_Event):
     class G(Enum):
         ROCK = 0
         PAPER = 1
@@ -178,6 +195,7 @@ class Bet(_Event):
         if return_data:
             return return_data
 
+    def normal_event(self):
         bet_num = random.randint(MIN.BET.value, min(MAX.BET.value, self.user_data.bread_num))
 
         bot_ges = self.G(random.randint(0, 2))

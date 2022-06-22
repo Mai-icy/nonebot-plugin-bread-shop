@@ -18,15 +18,16 @@ bread_rob = on_command("bread_rob", aliases={"抢面包", "rob", "🍞🍞🍞"}
 bread_give = on_command("bread_give", aliases={"送面包", "give", "送"}, priority=5)
 bread_bet = on_command("bread_bet", aliases={"面包猜拳", "赌面包", "bet"}, priority=5)
 
-bread_my = on_command("bread_my", aliases={"我的面包", "查看面包"}, priority=5)
+bread_check = on_command("bread_check", aliases={"偷看面包", "查看面包", "check"}, priority=5)
 bread_top = on_command("bread_top", aliases={"面包排行", "breadtop", "面包排名"}, priority=5)
 
+bread_help = on_command("bread_help", aliases={"面包帮助", "breadhelp", "bhelp"}, priority=5)
 
-EAT_EVENT = Eat()
-BUY_EVENT = Buy()
-ROB_EVENT = Rob()
-GIVE_EVENT = Give()
-BET_EVENT = Bet()
+EAT_EVENT = EatEvent()
+BUY_EVENT = BuyEvent()
+ROB_EVENT = RobEvent()
+GIVE_EVENT = GiveEvent()
+BET_EVENT = BetEvent()
 
 EAT_EVENT.add_events(eat_events)
 BUY_EVENT.add_events(buy_events)
@@ -162,11 +163,11 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg()):
             await bot.send(event=event, message=f"没有{ges}这种东西啦！请输入“石头”或“剪刀”或“布”！例如 ’/bet 石头‘ ")
             return
         if ges == "石头":
-            ges_ = Bet.G(0)
+            ges_ = BetEvent.G(0)
         elif ges == "布":
-            ges_ = Bet.G(1)
+            ges_ = BetEvent.G(1)
         else:
-            ges_ = Bet.G(2)
+            ges_ = BetEvent.G(2)
 
         BET_EVENT.set_group_id(group_id)
         BET_EVENT.set_user_id(user_qq)
@@ -175,6 +176,44 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg()):
 
         res_msg = msg_at + msg_txt
         await bread_bet.finish(res_msg)
+
+
+@bread_check.handle()
+async def _(event: Event, bot: Bot, args: Message = CommandArg()):
+    user_qq = event.get_user_id()
+    msg_at = Message(f"[CQ:at,qq={user_qq}]")
+
+    group_id = await get_group_id(event.get_session_id())
+
+    checked_qq = user_qq
+    for arg in args:
+        if arg.type == "at":
+            checked_qq = arg.data.get("qq", "")
+    if checked_qq == user_qq:
+        user_data = BreadDataManage(group_id).get_bread_data(user_qq)
+        msg = f"你现在拥有{user_data.bread_num}个面包，等级为Lv.{user_data.level}，排名为{user_data.no}！"
+    else:
+        checked_name = await get_nickname(bot, checked_qq, group_id)
+        checked_data = BreadDataManage(group_id).get_bread_data(checked_qq)
+        msg = f"{checked_name} 现在拥有{checked_data.bread_num}个面包，等级为Lv.{checked_data.level}，排名为{checked_data.no}！"
+
+    await bot.send(event=event, message=msg_at + msg)
+
+
+@bread_help.handle()
+async def _(event: Event, bot: Bot):
+    msg = """       🍞商店使用说明🍞
+指令	        说明
+买面包    	购买随机面包
+啃面包	    吃随机面包
+抢面包+@	  抢随机面包
+送面包+@	  送随机面包
+赌面包+""	猜拳赌随机面包
+查看面包+@    查看面包数据
+面包排行	    本群排行榜top5
+更多详情见本项目地址：
+https://github.com/Mai-icy/nonebot-plugin-bread-shop"""
+    await bot.send(event=event, message=msg)
 
 
 @bread_top.handle()
