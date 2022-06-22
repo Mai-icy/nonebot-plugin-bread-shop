@@ -163,9 +163,9 @@ class BreadDataManage:
     def reduce_bread(self, user_id: str, red_num: int, action: Action = Action.BUY) -> int:
         """减少用户面包数量，可以减少已经吃的数量，返回减少后的数量"""
         if action == Action.EAT:
-            col_name = self.DATA_COLUMN[0]
-        else:
             col_name = self.DATA_COLUMN[1]
+        else:
+            col_name = self.DATA_COLUMN[0]
         cur = self.conn.cursor()
         cur.execute(f"select * from BREAD_DATA where USERID='{user_id}'")
         data = cur.fetchone()
