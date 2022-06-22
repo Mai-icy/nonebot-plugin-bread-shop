@@ -194,6 +194,8 @@ class BetEvent(_Event):
         return_data = self._special_event()
         if return_data:
             return return_data
+           
+        return self.normal_event()
 
     def normal_event(self):
         bet_num = random.randint(MIN.BET.value, min(MAX.BET.value, self.user_data.bread_num))
