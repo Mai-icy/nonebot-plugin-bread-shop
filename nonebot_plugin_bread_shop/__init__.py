@@ -18,10 +18,11 @@ bread_rob = on_command("bread_rob", aliases={"抢面包", "rob", "🍞🍞🍞"}
 bread_give = on_command("bread_give", aliases={"送面包", "give", "送"}, priority=5)
 bread_bet = on_command("bread_bet", aliases={"面包猜拳", "赌面包", "bet"}, priority=5)
 
+bread_log = on_command("bread_log", aliases={"面包记录", "记录", "logb"}, priority=5)
 bread_check = on_command("bread_check", aliases={"偷看面包", "查看面包", "check"}, priority=5)
 bread_top = on_command("bread_top", aliases={"面包排行", "breadtop", "面包排名"}, priority=5)
 
-bread_help = on_command("bread_help", aliases={"面包帮助", "breadhelp", "bhelp"}, priority=5)
+bread_help = on_command("bread_help", aliases={"面包帮助", "breadhelp", "helpb"}, priority=5)
 
 EAT_EVENT = EatEvent()
 BUY_EVENT = BuyEvent()
@@ -200,6 +201,47 @@ async def _(event: Event, bot: Bot, args: Message = CommandArg()):
     await bot.send(event=event, message=msg_at + msg)
 
 
+@bread_log.handle()
+async def _(event: Event, bot: Bot, args: Message = CommandArg()):
+    user_qq = event.get_user_id()
+    msg_at = Message(f"[CQ:at,qq={user_qq}]")
+
+    group_id = await get_group_id(event.get_session_id())
+
+    add_arg = args.extract_plain_text()
+    if add_arg:
+        action_args = ["买", "吃", "抢", "赠送", "猜拳"]
+        if add_arg in action_args:
+            val_index = action_args.index(add_arg)
+            action = Action(val_index)
+            data = BreadDataManage(group_id).get_action_log(action)
+            name = await get_nickname(bot, data.user_id, group_id)
+            attr_val = BreadDataManage.LOG_COLUMN[val_index].lower()
+            app_msg = ["哇好有钱！", "好能吃，大胃王！", "大坏比！", "我超，带好人！", "哇塞，赌狗！"]
+            msg = f"{add_arg}次数最多是{name}！共{getattr(data, attr_val)}次！" + app_msg[val_index]
+            await bot.send(event=event, message=msg)
+            return
+        else:
+            msg = f'没有{add_arg}这个操作啦！只有"买"，"吃"，"抢"，"赠送"，"猜拳" 例如：/logb 买'
+            await bot.send(event=event, message=msg_at + msg)
+            return
+
+    checked_qq = user_qq
+    for arg in args:
+        if arg.type == "at":
+            checked_qq = arg.data.get("qq", "")
+    if checked_qq == user_qq:
+        user_log = BreadDataManage(group_id).get_log_data(user_qq)
+        msg = f"你共购买{user_log.buy_times}次，吃{user_log.eat_times}次，抢{user_log.rob_times}次，" \
+              f"赠送{user_log.give_times}次，猜拳{user_log.eat_times}次！"
+    else:
+        checked_name = await get_nickname(bot, checked_qq, group_id)
+        checked_log = BreadDataManage(group_id).get_log_data(checked_qq)
+        msg = f"{checked_name}共购买{checked_log.buy_times}次，吃{checked_log.eat_times}次，抢{checked_log.rob_times}次，" \
+              f"赠送{checked_log.give_times}次，猜拳{checked_log.eat_times}次！"
+    await bot.send(event=event, message=msg_at + msg)
+
+
 @bread_help.handle()
 async def _(event: Event, bot: Bot):
     msg = """       🍞商店使用说明🍞
@@ -209,6 +251,8 @@ async def _(event: Event, bot: Bot):
 抢面包+@	  抢随机面包
 送面包+@	  送随机面包
 赌面包+""	猜拳赌随机面包
+面包记录+""   查看操作次数最多的人
+面包记录+@    查看操作次数
 查看面包+@    查看面包数据
 面包排行	    本群排行榜top5
 更多详情见本项目地址：

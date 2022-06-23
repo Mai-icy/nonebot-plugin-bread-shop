@@ -116,6 +116,14 @@ class RobEvent(_Event):
             append_text = f"{self.robbed_name}没有面包可抢呜"
             return append_text
 
+        if self.user_id == self.robbed_id:
+            rob_num = random.randint(MIN.ROB.value, min(MAX.ROB.value, self.robbed_data.bread_num))
+            append_text = f"这么想抢自己哇，那我帮你抢！抢了你{rob_num}个面包嘿嘿！"
+            self.bread_db.reduce_bread(self.user_id, rob_num)
+            self.bread_db.update_no(self.robbed_id)
+            self.bread_db.cd_update_stamp(self.user_id, Action.ROB)
+            return append_text
+
         return_data = self._special_event()
         if return_data:
             return return_data
@@ -124,6 +132,7 @@ class RobEvent(_Event):
 
     def normal_event(self):
         rob_num = random.randint(MIN.ROB.value, min(MAX.ROB.value, self.robbed_data.bread_num))
+
         new_bread_num = self.bread_db.add_bread(self.user_id, rob_num)
         self.bread_db.reduce_bread(self.robbed_id, rob_num)
         new_bread_no = self.bread_db.update_no(self.user_id)
@@ -194,7 +203,6 @@ class BetEvent(_Event):
         return_data = self._special_event()
         if return_data:
             return return_data
-           
         return self.normal_event()
 
     def normal_event(self):

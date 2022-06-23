@@ -19,6 +19,7 @@ class Action(Enum):
 
 
 BreadData = namedtuple("BreadData", ["no", "user_id", "bread_num", "bread_eaten", "level"])
+LogData = namedtuple("LogData", ["user_id", "buy_times", "eat_times", "rob_times", "give_times", "bet_times"])
 
 
 class BreadDataManage:
@@ -243,9 +244,24 @@ class BreadDataManage:
         self.conn.commit()
         return log_times
 
+    def get_log_data(self, user_id: str):
+        cur = self.conn.cursor()
+        cur.execute(f"select * from BREAD_LOG where USERID='{user_id}'")
+        data = cur.fetchone()
+        self.conn.commit()
+        return LogData(*data)
+
+    def get_action_log(self, action: Action):
+        col = self.LOG_COLUMN[action.value]
+        cur = self.conn.cursor()
+        cur.execute(f"SELECT * FROM BREAD_LOG WHERE {col}= (SELECT MAX({col}) FROM BREAD_LOG) LIMIT 1;")
+        data = cur.fetchone()
+        self.conn.commit()
+        return LogData(*data)
+
 
 if __name__ == "__main__":
     DATABASE = Path() / ".." / ".." / ".." / "data" / "bread"
     db = BreadDataManage("893015705")
-    db.reduce_bread("3061674036", 10)
+    print(db.get_action_log(Action.EAT))
     pass
