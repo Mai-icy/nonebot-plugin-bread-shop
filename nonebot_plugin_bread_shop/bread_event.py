@@ -1,11 +1,11 @@
 #!/usr/bin/python
 # -*- coding:utf-8 -*-
 import random
-from .bread_handle import Action
-from .bread_operate import RobEvent, EatEvent, BuyEvent, GiveEvent, BetEvent
-from .config import MIN, MAX, CD
 from functools import wraps
 
+from .bread_handle import Action
+from .bread_operate import RobEvent, EatEvent, BuyEvent, GiveEvent, BetEvent
+from .config import MIN, MAX
 
 rob_events = []
 eat_events = []
@@ -23,7 +23,8 @@ def probability(value, action: Action, *, priority: int = 5):
             else:
                 return None
         event_list = (buy_events, eat_events, rob_events, give_events, bet_events)[action.value]
-        event_list.append((priority, inner))
+        setattr(inner, "priority", priority)
+        event_list.append(inner)
         return inner
     return wrapper
 
@@ -136,6 +137,14 @@ def bet_event_police(event: RobEvent):
     return append_text
 
 
+@probability(0.1, Action.BET, priority=5)
+def bet_event_addiction(event: BetEvent):
+    append_text = event.normal_event()
+    append_text += " 有点上瘾，你想再来一把！"
+    event.bread_db.cd_refresh(event.user_id, Action.BET)
+    return append_text
+
+
 @probability(0.09, Action.ROB, priority=5)
 def rob_event_fail(event: RobEvent):
     loss_num = random.randint(0, min(MAX.ROB.value, event.user_data.bread_num))
@@ -176,12 +185,4 @@ def give_event_lossless(event: GiveEvent):
 def bet_event_police(event: BetEvent):
     append_text = f"你赌面包被警察抓住了！你不赌，我不赌，和谐幸福跟我走！下次赌面包时间多等40min！"
     event.bread_db.cd_ban_action(event.user_id, Action.BET, 2400)
-    return append_text
-
-
-@probability(0.1, Action.BET, priority=5)
-def bet_event_police(event: BetEvent):
-    append_text = event.normal_event()
-    append_text += " 有点上瘾，你想再来一把！"
-    event.bread_db.cd_refresh(event.user_id, Action.BET)
     return append_text

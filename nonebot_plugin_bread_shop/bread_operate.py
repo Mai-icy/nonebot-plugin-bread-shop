@@ -41,9 +41,9 @@ class _Event:
 
     def _special_event(self):
         """按照优先级排布，同优先级随机排布"""
-        self._event_list.sort(key=lambda x: (x[0], random.random()))
+        self._event_list.sort(key=lambda x: (x.priority, random.random()))
         for event_func in self._event_list:
-            return_data = event_func[1](self)
+            return_data = event_func(self)
             if return_data:
                 return return_data
 
