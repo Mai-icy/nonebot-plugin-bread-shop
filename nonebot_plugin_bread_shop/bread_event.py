@@ -14,7 +14,7 @@ give_events = []
 bet_events = []
 
 
-def probability(value, action: Action, *, priority: int = 5):
+def probability(value, action: Action, *, priority: int = 5, group_id_list: list = None):
     def wrapper(func):
         @wraps(func)
         def inner(*args, **kwargs):
@@ -24,6 +24,7 @@ def probability(value, action: Action, *, priority: int = 5):
                 return None
         event_list = (buy_events, eat_events, rob_events, give_events, bet_events)[action.value]
         setattr(inner, "priority", priority)
+        setattr(inner, "group_id_list", group_id_list)
         event_list.append(inner)
         return inner
     return wrapper
@@ -130,21 +131,6 @@ def eat_event_bad(event: EatEvent):
     return append_text
 
 
-@probability(0.07, Action.ROB, priority=5)
-def bet_event_police(event: RobEvent):
-    append_text = f"你抢面包被警察抓住了！你真的太坏了！下次抢面包时间多等40min！"
-    event.bread_db.cd_ban_action(event.user_id, Action.BET, 2400)
-    return append_text
-
-
-@probability(0.1, Action.BET, priority=5)
-def bet_event_addiction(event: BetEvent):
-    append_text = event.normal_event()
-    append_text += " 有点上瘾，你想再来一把！"
-    event.bread_db.cd_refresh(event.user_id, Action.BET)
-    return append_text
-
-
 @probability(0.09, Action.ROB, priority=5)
 def rob_event_fail(event: RobEvent):
     loss_num = random.randint(0, min(MAX.ROB.value, event.user_data.bread_num))
@@ -185,4 +171,19 @@ def give_event_lossless(event: GiveEvent):
 def bet_event_police(event: BetEvent):
     append_text = f"你赌面包被警察抓住了！你不赌，我不赌，和谐幸福跟我走！下次赌面包时间多等40min！"
     event.bread_db.cd_ban_action(event.user_id, Action.BET, 2400)
+    return append_text
+
+
+@probability(0.07, Action.ROB, priority=5)
+def bet_event_police(event: RobEvent):
+    append_text = f"你抢面包被警察抓住了！你真的太坏了！下次抢面包时间多等40min！"
+    event.bread_db.cd_ban_action(event.user_id, Action.BET, 2400)
+    return append_text
+
+
+@probability(0.1, Action.BET, priority=5)
+def bet_event_addiction(event: BetEvent):
+    append_text = event.normal_event()
+    append_text += " 有点上瘾，你想再来一把！"
+    event.bread_db.cd_refresh(event.user_id, Action.BET)
     return append_text

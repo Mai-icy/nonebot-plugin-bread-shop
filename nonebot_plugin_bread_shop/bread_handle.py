@@ -219,8 +219,11 @@ class BreadDataManage:
         cur = self.conn.cursor()
         cur.execute(f"select * from BREAD_DATA where USERID='{user_id}'")
         data = cur.fetchone()
+        if not data:
+            self._create_user(user_id)
+            data = (0, user_id, 0, 0, 0, 0)
         self.conn.commit()
-        return BreadData(*data, level=(data[3] // 10))
+        return BreadData(*data, level=data[3] // 10)
 
     def get_all_data(self) -> List[BreadData]:
         """获取一个数据库内的所有用户数据"""
@@ -262,6 +265,4 @@ class BreadDataManage:
 
 if __name__ == "__main__":
     DATABASE = Path() / ".." / ".." / ".." / "data" / "bread"
-    db = BreadDataManage("893015705")
-    print(db.get_action_log(Action.EAT))
     pass

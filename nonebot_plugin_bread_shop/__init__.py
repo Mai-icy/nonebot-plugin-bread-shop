@@ -24,17 +24,12 @@ bread_top = on_command("bread_top", aliases={"面包排行", "breadtop", "面包
 
 bread_help = on_command("bread_help", aliases={"面包帮助", "breadhelp", "helpb"}, priority=5)
 
-EAT_EVENT = EatEvent()
-BUY_EVENT = BuyEvent()
-ROB_EVENT = RobEvent()
-GIVE_EVENT = GiveEvent()
-BET_EVENT = BetEvent()
 
-EAT_EVENT.add_events(eat_events)
-BUY_EVENT.add_events(buy_events)
-ROB_EVENT.add_events(rob_events)
-GIVE_EVENT.add_events(give_events)
-BET_EVENT.add_events(bet_events)
+EatEvent.add_events(eat_events)
+BuyEvent.add_events(buy_events)
+RobEvent.add_events(rob_events)
+GiveEvent.add_events(give_events)
+BetEvent.add_events(bet_events)
 
 
 @bread_buy.handle()
@@ -51,9 +46,9 @@ async def _(event: Event, bot: Bot):
     elif wait_time < 0:
         msg_txt = f"你被禁止购买面包啦！{(abs(wait_time)+ CD.BUY.value) // 60}分钟后才能购买！"
     else:
-        BUY_EVENT.set_group_id(group_id)
-        BUY_EVENT.set_user_id(user_qq)
-        msg_txt = BUY_EVENT.execute()
+        event_ = BuyEvent(group_id)
+        event_.set_user_id(user_qq)
+        msg_txt = event_.execute()
 
     res_msg = msg_at + Message(msg_txt)
     await bot.send(event=event, message=res_msg)
@@ -74,9 +69,9 @@ async def _(event: Event, bot: Bot):
     elif wait_time < 0:
         msg_txt = f"你被禁止吃面包啦！{(abs(wait_time)+ CD.EAT.value) // 60}分钟后才能吃哦！"
     else:
-        EAT_EVENT.set_group_id(group_id)
-        EAT_EVENT.set_user_id(user_qq)
-        msg_txt = EAT_EVENT.execute()
+        event_ = EatEvent(group_id)
+        event_.set_user_id(user_qq)
+        msg_txt = event_.execute()
 
     res_msg = msg_at + Message(msg_txt)
     await bot.send(event=event, message=res_msg)
@@ -103,10 +98,10 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg()):
     elif wait_time < 0:
         msg_txt = f"你被禁止抢面包啦！{(abs(wait_time)+ CD.ROB.value) // 60}分钟后才能抢哦！"
     else:
-        ROB_EVENT.set_group_id(group_id)
-        ROB_EVENT.set_user_id(user_qq)
-        ROB_EVENT.set_robbed_id(robbed_qq, robbed_name)
-        msg_txt = ROB_EVENT.execute()
+        event_ = RobEvent(group_id)
+        event_.set_user_id(user_qq)
+        event_.set_robbed_id(robbed_qq, robbed_name)
+        msg_txt = event_.execute()
 
     res_msg = msg_at + msg_txt
     await bot.send(event=event, message=res_msg)
@@ -133,10 +128,10 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg()):
     elif wait_time < 0:
         msg_txt = f"你被禁止送面包啦！{(abs(wait_time)+ CD.GIVE.value) // 60}分钟后才能赠送哦！"
     else:
-        GIVE_EVENT.set_group_id(group_id)
-        GIVE_EVENT.set_user_id(user_qq)
-        GIVE_EVENT.set_given_id(robbed_qq, robbed_name)
-        msg_txt = GIVE_EVENT.execute()
+        event_ = GiveEvent(group_id)
+        event_.set_user_id(user_qq)
+        event_.set_given_id(robbed_qq, robbed_name)
+        msg_txt = event_.execute()
 
     res_msg = msg_at + msg_txt
     await bot.send(event=event, message=res_msg)
@@ -170,10 +165,10 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg()):
         else:
             ges_ = BetEvent.G(2)
 
-        BET_EVENT.set_group_id(group_id)
-        BET_EVENT.set_user_id(user_qq)
-        BET_EVENT.set_user_gestures(ges_)
-        msg_txt = BET_EVENT.execute()
+        event_ = BetEvent(group_id)
+        event_.set_user_id(user_qq)
+        event_.set_user_gestures(ges_)
+        msg_txt = event_.execute()
 
         res_msg = msg_at + msg_txt
         await bread_bet.finish(res_msg)

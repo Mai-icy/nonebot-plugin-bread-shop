@@ -17,35 +17,51 @@ def cd_wait_time(group_id, user_id, operate: Action) -> int:
 
 
 class _Event:
+    _instance = {}
+    _has_init = {}
+    _public_events = []
 
-    def __init__(self):
-        self.group_id = None
-        self.user_id = None
-        self.user_data = BreadData(0, "0", 0, 0, 0)
-        self.bread_db = BreadDataManage(None)
-        self._event_list = []
+    def __new__(cls, group_id: str):
+        if group_id is None:
+            return None
+        if cls._instance.get(group_id) is None:
+            cls._instance[group_id] = super(_Event, cls).__new__(cls)
+        return cls._instance[group_id]
 
-    def set_group_id(self, group_id: str):
-        self.group_id = group_id
-        self.bread_db = BreadDataManage(group_id)
+    def __init__(self, group_id: str):
+        if not self._has_init.get(group_id):
+            self._has_init[group_id] = True
+            self.group_id = group_id
+            self.bread_db = BreadDataManage(group_id)
+            self.user_id = None
+            self.user_data = BreadData(0, "0", 0, 0, 0)
+            self._private_events = []
+
+    @classmethod
+    def add_event(cls, func):
+        if not func.group_id_list:
+            cls._public_events.append(func)
+        else:
+            for group_id in func.group_id_list:
+                cls(group_id)._private_events.append(func)
+
+    @classmethod
+    def add_events(cls, func_list):
+        for func in func_list:
+            cls.add_event(func)
+
+    def _special_event(self):
+        """按照优先级排布，同优先级随机排布"""
+        events = self._private_events + self._public_events
+        events.sort(key=lambda x: (x.priority, random.random()))
+        for event_func in events:
+            return_data = event_func(self)
+            if return_data:
+                return return_data
 
     def set_user_id(self, user_id: str):
         self.user_id = user_id
         self.user_data = self.bread_db.get_bread_data(self.user_id)
-
-    def add_event(self, func):
-        self._event_list.append(func)
-
-    def add_events(self, func_list):
-        self._event_list.extend(func_list)
-
-    def _special_event(self):
-        """按照优先级排布，同优先级随机排布"""
-        self._event_list.sort(key=lambda x: (x.priority, random.random()))
-        for event_func in self._event_list:
-            return_data = event_func(self)
-            if return_data:
-                return return_data
 
     def execute(self):
         pass
@@ -55,6 +71,10 @@ class _Event:
 
 
 class BuyEvent(_Event):
+    _instance = {}
+    _has_init = {}
+    _public_events = []
+
     def execute(self):
         self.bread_db.log_user_action(self.user_id, Action.BUY)
 
@@ -74,6 +94,10 @@ class BuyEvent(_Event):
 
 
 class EatEvent(_Event):
+    _instance = {}
+    _has_init = {}
+    _public_events = []
+
     def execute(self):
         self.bread_db.log_user_action(self.user_id, Action.EAT)
 
@@ -98,8 +122,12 @@ class EatEvent(_Event):
 
 
 class RobEvent(_Event):
-    def __init__(self):
-        super().__init__()
+    _instance = {}
+    _has_init = {}
+    _public_events = []
+
+    def __init__(self, group_id: str):
+        super().__init__(group_id)
         self.robbed_id = None
         self.robbed_name = None
         self.robbed_data = BreadData(0, "0", 0, 0, 0)
@@ -144,8 +172,12 @@ class RobEvent(_Event):
 
 
 class GiveEvent(_Event):
-    def __init__(self):
-        super().__init__()
+    _instance = {}
+    _has_init = {}
+    _public_events = []
+
+    def __init__(self, group_id):
+        super().__init__(group_id)
         self.given_id = None
         self.given_name = None
         self.given_data = BreadData(0, "0", 0, 0, 0)
@@ -181,13 +213,17 @@ class GiveEvent(_Event):
 
 
 class BetEvent(_Event):
+    _instance = {}
+    _has_init = {}
+    _public_events = []
+
     class G(Enum):
         ROCK = 0
         PAPER = 1
         SCISSORS = 2
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, group_id: str):
+        super().__init__(group_id)
         self.user_gestures = None
 
     def set_user_gestures(self, ges: G):

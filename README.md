@@ -18,6 +18,8 @@
 
 一起来买面包吧！
 
+注：面包数据库一个群一个，排行均属于群内排行，不同群所有数据不相干。
+
 ## 🤔使用
 
 | 指令 | 说明 | 其它形式 |
@@ -41,8 +43,12 @@
 
 特殊事件模板：
 
+group_id_list默认为全部群聊
+
+priority默认为5，数字越低越优先，优先级相同的事件先后顺序每次随机
+
 ```python
-@probability(概率, Action.操作, priority=优先级)
+@probability(概率, Action.操作, priority=优先级, group_id_list=["群号1", "群号2"])
 def 函数名(event: 操作):
     # event.user_data 可以查看操作的用户的面包数据
     # event.user_id   可以获取操作的用户的id（qq）
@@ -73,4 +79,32 @@ def eat_event_much(event: Eat):
     event.bread_db.ban_user_action(event.user_id, Action.EAT, 1800)
     return append_text
 ```
+
+若想要设置买面包打烊时间如：
+
+```python
+@probability(1, Action.EAT, priority=1, group_id_list=["群号1", "群号2"])
+def closing_time(event: Eat):
+    if 判断时间:
+    	return "打烊"
+```
+
+其他注意点：
+
+event.normal_event()为事件正常进行全流程并返回原来的话。
+
+例如：
+
+```python
+@probability(0.1, Action.BET, priority=5)
+def bet_event_addiction(event: BetEvent):
+    append_text = event.normal_event()
+    append_text += " 有点上瘾，你想再来一把！"
+    event.bread_db.cd_refresh(event.user_id, Action.BET)
+    return append_text
+```
+
+
+
+return None 相当于事件不触发，返回任何字符串都认定为事件触发
 
