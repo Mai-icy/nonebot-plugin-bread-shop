@@ -76,9 +76,8 @@ class BuyEvent(_Event):
     _public_events = []
 
     def execute(self):
-        self.bread_db.log_user_action(self.user_id, Action.BUY)
-
         return_data = self._special_event()
+        self.bread_db.log_user_action(self.user_id, Action.BUY)
         if return_data:
             return return_data
 
@@ -99,13 +98,12 @@ class EatEvent(_Event):
     _public_events = []
 
     def execute(self):
-        self.bread_db.log_user_action(self.user_id, Action.EAT)
-
         if self.user_data.bread_num < MIN.EAT.value:
             append_text = f"你的面包还不够吃w，来买一些面包吧！"
             return append_text
 
         return_data = self._special_event()
+        self.bread_db.log_user_action(self.user_id, Action.EAT)
         if return_data:
             return return_data
 
@@ -138,8 +136,6 @@ class RobEvent(_Event):
         self.robbed_data = self.bread_db.get_bread_data(robbed_id)
 
     def execute(self):
-        self.bread_db.log_user_action(self.user_id, Action.ROB)
-
         if not self.robbed_data or self.robbed_data.bread_num < MIN.ROB.value:
             append_text = f"{self.robbed_name}没有面包可抢呜"
             return append_text
@@ -153,6 +149,7 @@ class RobEvent(_Event):
             return append_text
 
         return_data = self._special_event()
+        self.bread_db.log_user_action(self.user_id, Action.ROB)
         if return_data:
             return return_data
 
@@ -188,13 +185,21 @@ class GiveEvent(_Event):
         self.given_data = self.bread_db.get_bread_data(robbed_id)
 
     def execute(self):
-        self.bread_db.log_user_action(self.user_id, Action.GIVE)
-
-        if self.user_data.bread_num < MIN.EAT.value:
+        if self.user_data.bread_num < MIN.GIVE.value:
             append_text = f"你的面包还不够赠送w，来买一些面包吧！"
             return append_text
 
+        if self.user_id == self.given_id:
+            give_num = random.randint(MIN.GIVE.value, min(MAX.GIVE.value, self.user_id.bread_num))
+            append_text = f"送给自己肯定是不行的啦！送给我叭！你送了我{give_num}个面包嘿嘿！"
+            self.bread_db.reduce_bread(self.user_id, give_num)
+            self.bread_db.update_no(self.user_id)
+            self.bread_db.cd_update_stamp(self.user_id, Action.ROB)
+            return append_text
+
         return_data = self._special_event()
+        self.bread_db.log_user_action(self.user_id, Action.GIVE)
+
         if return_data:
             return return_data
         return self.normal_event()

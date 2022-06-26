@@ -61,7 +61,7 @@ def buy_event_too_much(event: BuyEvent):
     return append_text
 
 
-@probability(0.4, Action.EAT, priority=5)
+@probability(0.2, Action.EAT, priority=5)
 def eat_event_too_much_bread(event: EatEvent):
     if event.user_data.bread_num < 90:
         return
@@ -71,7 +71,7 @@ def eat_event_too_much_bread(event: EatEvent):
     return txt
 
 
-@probability(0.2, Action.EAT, priority=5)
+@probability(0.15, Action.EAT, priority=5)
 def eat_event_not_enough(event: EatEvent):
     eat_num = random.randint(MIN.EAT.value, min(MIN.EAT.value + 3, event.user_data.bread_num))
     event.bread_db.reduce_bread(event.user_id, eat_num)
@@ -177,7 +177,7 @@ def bet_event_police(event: BetEvent):
 @probability(0.07, Action.ROB, priority=5)
 def bet_event_police(event: RobEvent):
     append_text = f"你抢面包被警察抓住了！你真的太坏了！下次抢面包时间多等40min！"
-    event.bread_db.cd_ban_action(event.user_id, Action.BET, 2400)
+    event.bread_db.cd_ban_action(event.user_id, Action.ROB, 2400)
     return append_text
 
 
