@@ -86,6 +86,7 @@ def eat_event_much(event: Eat):
 @probability(1, Action.EAT, priority=1, group_id_list=["群号1", "群号2"])
 def closing_time(event: Eat):
     if 判断时间:
+        event.bread_db.reduce_user_log(event.user_id, Action.EAT)  # 防止记录
     	return "打烊"
 ```
 

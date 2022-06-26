@@ -233,7 +233,7 @@ class BreadDataManage:
         self.conn.commit()
         return [BreadData(*item, level=item[3] // 10) for item in data]
 
-    def log_user_action(self, user_id: str, action: Action) -> int:
+    def add_user_log(self, user_id: str, action: Action) -> int:
         """记录用户操作次数递增1并返回"""
         if not isinstance(action, Action):
             raise KeyError("the parameter operate must be Operate")
@@ -243,6 +243,20 @@ class BreadDataManage:
         data = cur.fetchone()
         log_times = data[action.value + 1]
         log_times += 1
+        cur.execute(f"update BREAD_LOG set {op_key}={log_times} where USERID={user_id}")
+        self.conn.commit()
+        return log_times
+
+    def reduce_user_log(self, user_id: str, action: Action) -> int:
+        """记录用户操作次数递减1并返回"""
+        if not isinstance(action, Action):
+            raise KeyError("the parameter operate must be Operate")
+        op_key = self.LOG_COLUMN[action.value]
+        cur = self.conn.cursor()
+        cur.execute(f"select * from BREAD_LOG where USERID='{user_id}'")
+        data = cur.fetchone()
+        log_times = data[action.value + 1]
+        log_times -= 1
         cur.execute(f"update BREAD_LOG set {op_key}={log_times} where USERID={user_id}")
         self.conn.commit()
         return log_times

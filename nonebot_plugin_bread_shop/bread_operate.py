@@ -77,7 +77,7 @@ class BuyEvent(_Event):
 
     def execute(self):
         return_data = self._special_event()
-        self.bread_db.log_user_action(self.user_id, Action.BUY)
+        self.bread_db.add_user_log(self.user_id, Action.BUY)
         if return_data:
             return return_data
 
@@ -103,7 +103,7 @@ class EatEvent(_Event):
             return append_text
 
         return_data = self._special_event()
-        self.bread_db.log_user_action(self.user_id, Action.EAT)
+        self.bread_db.add_user_log(self.user_id, Action.EAT)
         if return_data:
             return return_data
 
@@ -149,7 +149,7 @@ class RobEvent(_Event):
             return append_text
 
         return_data = self._special_event()
-        self.bread_db.log_user_action(self.user_id, Action.ROB)
+        self.bread_db.add_user_log(self.user_id, Action.ROB)
         if return_data:
             return return_data
 
@@ -198,7 +198,7 @@ class GiveEvent(_Event):
             return append_text
 
         return_data = self._special_event()
-        self.bread_db.log_user_action(self.user_id, Action.GIVE)
+        self.bread_db.add_user_log(self.user_id, Action.GIVE)
 
         if return_data:
             return return_data
@@ -235,7 +235,7 @@ class BetEvent(_Event):
         self.user_gestures = ges
 
     def execute(self):
-        self.bread_db.log_user_action(self.user_id, Action.BET)
+        self.bread_db.add_user_log(self.user_id, Action.BET)
 
         if self.user_data.bread_num < MIN.BET.value:
             append_text = f"你的面包还不够猜拳w，来买一些面包吧！"
@@ -263,6 +263,6 @@ class BetEvent(_Event):
         else:
             new_bread_num_user = self.bread_db.reduce_bread(self.user_id, bet_num)
             self.bread_db.update_no(self.user_id)
-            append_text = f"{bot_ges_text}!嘿嘿，我赢啦！你的{bet_num}个面包归我了！你现在拥有{new_bread_num_user}个面包！"
-            self.bread_db.cd_update_stamp(self.user_id, Action.BET)
+            append_text = f"{bot_ges_text}!嘿嘿，我赢啦！你的{bet_num}个面包归我了！你现在拥有{new_bread_num_user}个面包！还可以再来一次嘿嘿"
+            # self.bread_db.cd_update_stamp(self.user_id, Action.BET)
         return append_text
