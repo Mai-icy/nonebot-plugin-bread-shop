@@ -2,8 +2,12 @@
 # -*- coding:utf-8 -*-
 from enum import Enum
 
+# 被禁止的群聊
+BANNED_GROUPS = []
+
 
 class CD(Enum):
+    """操作冷却（单位：秒）"""
     BUY = 4200
     EAT = 4800
     ROB = 7000
@@ -12,6 +16,7 @@ class CD(Enum):
 
 
 class MAX(Enum):
+    """操作随机值上限"""
     BUY = 10
     EAT = 7
     ROB = 7
@@ -20,6 +25,7 @@ class MAX(Enum):
 
 
 class MIN(Enum):
+    """操作随机值下限"""
     BUY = 1
     EAT = 1
     ROB = 1

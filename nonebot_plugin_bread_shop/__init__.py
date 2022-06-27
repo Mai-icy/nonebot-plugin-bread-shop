@@ -10,6 +10,7 @@ from nonebot.adapters.onebot.v11 import Bot, Event, Message
 from .bread_handle import BreadDataManage, Action
 from .bread_operate import *
 from .bread_event import rob_events, buy_events, eat_events, give_events, bet_events
+from .config import BANNED_GROUPS
 
 
 bread_buy = on_command("bread_buy", aliases={"买面包", "buy", "🍞"}, priority=5)
@@ -38,6 +39,9 @@ async def _(event: Event, bot: Bot):
     msg_at = Message(f"[CQ:at,qq={user_qq}]")
 
     group_id = await get_group_id(event.get_session_id())
+    if group_id in BANNED_GROUPS:
+        await bot.send(event=event, message="本群已禁止面包店！请联系bot管理员！")
+        return
 
     wait_time = cd_wait_time(group_id, user_qq, Action.BUY)
     if wait_time > 0:
@@ -52,7 +56,6 @@ async def _(event: Event, bot: Bot):
 
     res_msg = msg_at + Message(msg_txt)
     await bot.send(event=event, message=res_msg)
-    # await bread_buy.finish(event=ad, message="购买成功/test")
 
 
 @bread_eat.handle()
@@ -61,6 +64,9 @@ async def _(event: Event, bot: Bot):
     msg_at = Message(f"[CQ:at,qq={user_qq}]")
 
     group_id = await get_group_id(event.get_session_id())
+    if group_id in BANNED_GROUPS:
+        await bot.send(event=event, message="本群已禁止面包店！请联系bot管理员！")
+        return
 
     wait_time = cd_wait_time(group_id, user_qq, Action.EAT)
     if wait_time > 0:
@@ -83,6 +89,9 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg()):
     msg_at = Message(f"[CQ:at,qq={user_qq}]")
 
     group_id = await get_group_id(event.get_session_id())
+    if group_id in BANNED_GROUPS:
+        await bot.send(event=event, message="本群已禁止面包店！请联系bot管理员！")
+        return
 
     robbed_qq = None
     for arg in args:
@@ -113,6 +122,9 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg()):
     msg_at = Message(f"[CQ:at,qq={user_qq}]")
 
     group_id = await get_group_id(event.get_session_id())
+    if group_id in BANNED_GROUPS:
+        await bot.send(event=event, message="本群已禁止面包店！请联系bot管理员！")
+        return
 
     robbed_qq = None
     for arg in args:
@@ -142,6 +154,9 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg()):
     user_qq = event.get_user_id()
     msg_at = Message(f"[CQ:at,qq={user_qq}]")
     group_id = await get_group_id(event.get_session_id())
+    if group_id in BANNED_GROUPS:
+        await bot.send(event=event, message="本群已禁止面包店！请联系bot管理员！")
+        return
 
     wait_time = cd_wait_time(group_id, user_qq, Action.BET)
     if wait_time > 0:
@@ -180,6 +195,9 @@ async def _(event: Event, bot: Bot, args: Message = CommandArg()):
     msg_at = Message(f"[CQ:at,qq={user_qq}]")
 
     group_id = await get_group_id(event.get_session_id())
+    if group_id in BANNED_GROUPS:
+        await bot.send(event=event, message="本群已禁止面包店！请联系bot管理员！")
+        return
 
     checked_qq = user_qq
     for arg in args:
@@ -202,6 +220,9 @@ async def _(event: Event, bot: Bot, args: Message = CommandArg()):
     msg_at = Message(f"[CQ:at,qq={user_qq}]")
 
     group_id = await get_group_id(event.get_session_id())
+    if group_id in BANNED_GROUPS:
+        await bot.send(event=event, message="本群已禁止面包店！请联系bot管理员！")
+        return
 
     add_arg = args.extract_plain_text()
     if add_arg:
@@ -239,6 +260,11 @@ async def _(event: Event, bot: Bot, args: Message = CommandArg()):
 
 @bread_help.handle()
 async def _(event: Event, bot: Bot):
+    group_id = await get_group_id(event.get_session_id())
+    if group_id in BANNED_GROUPS:
+        await bot.send(event=event, message="本群已禁止面包店！请联系bot管理员！")
+        return
+
     msg = """       🍞商店使用说明🍞
 指令	        说明
 买面包    	购买随机面包
@@ -257,9 +283,10 @@ https://github.com/Mai-icy/nonebot-plugin-bread-shop"""
 
 @bread_top.handle()
 async def _(bot: Bot, event: Event):
-    group_id = event.get_session_id()
-    res = re.findall("_(.*)_", group_id)
-    group_id = res[0]
+    group_id = await get_group_id(event.get_session_id())
+    if group_id in BANNED_GROUPS:
+        await bot.send(event=event, message="本群已禁止面包店！请联系bot管理员！")
+        return
     msg = await get_group_top(bot, group_id)
     await bot.send(event=event, message=msg)
 

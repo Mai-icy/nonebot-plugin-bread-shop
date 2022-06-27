@@ -1,8 +1,11 @@
 # nonebot-plugin-bread-shop
-<a href="./LICENSE">
-    <img src="https://img.shields.io/github/license/Mai-icy/nonebot-plugin-bread-shop.svg" alt="license">
-</a><img src="https://img.shields.io/badge/python-3.7+-blue.svg" alt="python">
-<a href="https://www.oscs1024.com/project/oscs/Mai-icy/nonebot-plugin-bread-shop?ref=badge_small" alt="OSCS Status"><img src="https://www.oscs1024.com/platform/badge/Mai-icy/nonebot-plugin-bread-shop.svg?size=small"/></a>
+
+![OSCS Status](https://www.oscs1024.com/platform/badge/Mai-icy/nonebot-plugin-bread-shop.svg?size=small)
+![GitHub license](https://img.shields.io/badge/python-3.7+-blue.svg)
+[![GitHub license](https://img.shields.io/github/license/Mai-icy/nonebot-plugin-bread-shop)](https://github.com/Mai-icy/nonebot-plugin-bread-shop/blob/main/LICENSE)
+![Lines of code](https://img.shields.io/tokei/lines/github/Mai-icy/nonebot-plugin-bread-shop)
+
+---
 
 ## ⚠️警告须知！
 
@@ -18,7 +21,7 @@
 
 一起来买面包吧！
 
-注：面包数据库一个群一个，排行均属于群内排行，不同群所有数据不相干。
+> 注：**面包数据库一个群一个，排行均属于群内排行，不同群所有数据不相干。**
 
 ## 🤔使用
 

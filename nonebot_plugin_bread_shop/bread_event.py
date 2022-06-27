@@ -71,7 +71,7 @@ def eat_event_too_much_bread(event: EatEvent):
     return txt
 
 
-@probability(0.15, Action.EAT, priority=5)
+@probability(0.2, Action.EAT, priority=5)
 def eat_event_not_enough(event: EatEvent):
     eat_num = random.randint(MIN.EAT.value, min(MIN.EAT.value + 3, event.user_data.bread_num))
     event.bread_db.reduce_bread(event.user_id, eat_num)
@@ -141,6 +141,13 @@ def rob_event_fail(event: RobEvent):
     return append_text
 
 
+@probability(0.07, Action.ROB, priority=5)
+def bet_event_police(event: RobEvent):
+    append_text = f"你抢面包被警察抓住了！你真的太坏了！下次抢面包时间多等40min！"
+    event.bread_db.cd_ban_action(event.user_id, Action.ROB, 2400)
+    return append_text
+
+
 @probability(0.1, Action.GIVE, priority=5)
 def give_event_commission(event: GiveEvent):
     if event.user_data.bread_num <= MAX.GIVE.value * 2:
@@ -167,23 +174,16 @@ def give_event_lossless(event: GiveEvent):
     return append_text
 
 
-@probability(0.07, Action.BET, priority=5)
-def bet_event_police(event: BetEvent):
-    append_text = f"你赌面包被警察抓住了！你不赌，我不赌，和谐幸福跟我走！下次赌面包时间多等40min！"
-    event.bread_db.cd_ban_action(event.user_id, Action.BET, 2400)
-    return append_text
-
-
-@probability(0.07, Action.ROB, priority=5)
-def bet_event_police(event: RobEvent):
-    append_text = f"你抢面包被警察抓住了！你真的太坏了！下次抢面包时间多等40min！"
-    event.bread_db.cd_ban_action(event.user_id, Action.ROB, 2400)
-    return append_text
-
-
 @probability(0.1, Action.BET, priority=5)
 def bet_event_addiction(event: BetEvent):
     append_text = event.normal_event()
     append_text += " 有点上瘾，你想再来一把！"
     event.bread_db.cd_refresh(event.user_id, Action.BET)
+    return append_text
+
+
+@probability(0.07, Action.BET, priority=5)
+def bet_event_police(event: BetEvent):
+    append_text = f"你赌面包被警察抓住了！你不赌，我不赌，和谐幸福跟我走！下次赌面包时间多等40min！"
+    event.bread_db.cd_ban_action(event.user_id, Action.BET, 2400)
     return append_text

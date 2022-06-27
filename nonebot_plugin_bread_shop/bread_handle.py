@@ -261,14 +261,16 @@ class BreadDataManage:
         self.conn.commit()
         return log_times
 
-    def get_log_data(self, user_id: str):
+    def get_log_data(self, user_id: str) -> LogData:
+        """获取用户操作次数记录数据"""
         cur = self.conn.cursor()
         cur.execute(f"select * from BREAD_LOG where USERID='{user_id}'")
         data = cur.fetchone()
         self.conn.commit()
         return LogData(*data)
 
-    def get_action_log(self, action: Action):
+    def get_action_log(self, action: Action) -> LogData:
+        """获取某个操作次数最多用户的数据"""
         col = self.LOG_COLUMN[action.value]
         cur = self.conn.cursor()
         cur.execute(f"SELECT * FROM BREAD_LOG WHERE {col}= (SELECT MAX({col}) FROM BREAD_LOG) LIMIT 1;")

@@ -13,6 +13,8 @@ def cd_wait_time(group_id, user_id, operate: Action) -> int:
     now_stamp = int(time.time())
     sep_time = now_stamp - cd_stamp
     cd = getattr(CD, operate.name)
+    if sep_time < 0:
+        return sep_time
     return cd.value - sep_time if sep_time < cd.value else 0
 
 
