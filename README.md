@@ -27,7 +27,17 @@
 > 注：**面包数据库一个群一个，排行均属于群内排行，不同群所有数据不相干。**
 
 ## 💿安装
-pip install nonebot-plugin-workscore
+- 使用 nb-cli
+
+```shell
+nb plugin install nonebot-plugin-bread-shop
+```
+
+- 使用 pip
+
+```shell
+pip install nonebot-plugin-bread-shop
+```
 
 ## 🤔使用
 
