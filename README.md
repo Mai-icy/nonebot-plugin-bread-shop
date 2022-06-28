@@ -1,11 +1,14 @@
 # nonebot-plugin-bread-shop
 
 ![OSCS Status](https://www.oscs1024.com/platform/badge/Mai-icy/nonebot-plugin-bread-shop.svg?size=small)
+[![VERSION](https://img.shields.io/pypi/v/nonebot-plugin-bread-shop)](https://pypi.org/project/nonebot-plugin-bread-shop/)
 ![GitHub license](https://img.shields.io/badge/python-3.7+-blue.svg)
 [![GitHub license](https://img.shields.io/github/license/Mai-icy/nonebot-plugin-bread-shop)](https://github.com/Mai-icy/nonebot-plugin-bread-shop/blob/main/LICENSE)
 ![Lines of code](https://img.shields.io/tokei/lines/github/Mai-icy/nonebot-plugin-bread-shop)
 
+
 ---
+
 
 ## ⚠️警告须知！
 
@@ -22,6 +25,9 @@
 一起来买面包吧！
 
 > 注：**面包数据库一个群一个，排行均属于群内排行，不同群所有数据不相干。**
+
+## 💿安装
+pip install nonebot-plugin-workscore
 
 ## 🤔使用
 
