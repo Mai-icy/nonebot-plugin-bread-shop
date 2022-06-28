@@ -164,7 +164,7 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg()):
         await bot.send(event=event, message=msg_at + msg_txt)
         return
     elif wait_time < 0:
-        msg_txt = f"你被禁止猜拳啦！{(abs(wait_time)+ CD.GIVE.value) // 60}分钟后才能猜拳哦！"
+        msg_txt = f"你被禁止猜拳啦！{(abs(wait_time)+ CD.BET.value) // 60}分钟后才能猜拳哦！"
         await bot.send(event=event, message=msg_at + msg_txt)
         return
     else:
