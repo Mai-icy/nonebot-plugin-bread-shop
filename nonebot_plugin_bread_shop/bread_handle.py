@@ -2,10 +2,12 @@
 # -*- coding:utf-8 -*-
 import sqlite3
 import time
+from collections import namedtuple
 from enum import Enum
+from functools import wraps
+from inspect import signature
 from pathlib import Path
 from typing import List
-from collections import namedtuple
 
 DATABASE = Path() / "data" / "bread"
 
@@ -20,6 +22,30 @@ class Action(Enum):
 
 BreadData = namedtuple("BreadData", ["no", "user_id", "bread_num", "bread_eaten", "level"])
 LogData = namedtuple("LogData", ["user_id", "buy_times", "eat_times", "rob_times", "give_times", "bet_times"])
+
+
+def type_assert(*ty_args, **ty_kwargs):
+    """sql类型检查，防SQL注入（虽然没有直接操作并不能注入）"""
+    def decorate(func):
+        sig = signature(func)
+        bound_types = sig.bind_partial(*ty_args, **ty_kwargs).arguments
+
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            bound_values = sig.bind(*args, **kwargs)
+            for name, value in bound_values.arguments.items():
+                if name in bound_types:
+                    if bound_types[name] == "user_id":
+                        if isinstance(value, str):
+                            if not value.isdigit():
+                                raise TypeError("user_id must consist of numeric characters.")
+                        else:
+                            raise TypeError('Argument {} must be {}'.format(name, str))
+                    elif not isinstance(value, bound_types[name]):
+                        raise TypeError('Argument {} must be {}'.format(name, bound_types[name]))
+            return func(*args, **kwargs)
+        return wrapper
+    return decorate
 
 
 class BreadDataManage:
@@ -88,6 +114,7 @@ class BreadDataManage:
         result = cur.fetchall()
         return len(result) + 1
 
+    @type_assert(object, "user_id")
     def _create_user(self, user_id: str) -> None:
         """在数据库中创建用户并初始化"""
         new_id = self._get_id()
@@ -99,19 +126,17 @@ class BreadDataManage:
                   f" VALUES ('{user_id}',0,0,0,0,0)")
         self.conn.commit()
 
+    @type_assert(object, "user_id", Action)
     def cd_refresh(self, user_id: str, action: Action) -> None:
         """刷新用户操作cd"""
-        if not isinstance(action, Action):
-            raise KeyError("the parameter operate must be Operate")
         op_key = self.CD_COLUMN[action.value]
         cur = self.conn.cursor()
         cur.execute(f"update BREAD_CD set {op_key}={1} where USERID='{user_id}'")
         self.conn.commit()
 
+    @type_assert(object, "user_id", Action)
     def cd_get_stamp(self, user_id: str, action: Action) -> int:
         """获取用户上次操作时间戳"""
-        if not isinstance(action, Action):
-            raise KeyError("the parameter operate must be Operate")
         cur = self.conn.cursor()
         cur.execute(f"select * from BREAD_CD where USERID={user_id}")
         result = cur.fetchone()
@@ -121,25 +146,24 @@ class BreadDataManage:
         self.conn.commit()
         return result[action.value + 1]
 
+    @type_assert(object, "user_id", Action, int)
     def cd_ban_action(self, user_id: str, action: Action, ban_time) -> None:
         """禁止用户一段时间操作，单次延长cd，单位为秒"""
-        if not isinstance(action, Action):
-            raise KeyError("the parameter operate must be Operate")
         op_key = self.CD_COLUMN[action.value]
         cur = self.conn.cursor()
         cur.execute(f"update BREAD_CD set {op_key}={int(time.time()) + ban_time} where USERID='{user_id}'")
         self.conn.commit()
 
+    @type_assert(object, "user_id", Action)
     def cd_update_stamp(self, user_id: str, action: Action) -> None:
         """重置用户操作CD(重新开始记录冷却)"""
-        if not isinstance(action, Action):
-            raise KeyError("the parameter operate must be Operate")
         op_key = self.CD_COLUMN[action.value]
         stamp = int(time.time())
         cur = self.conn.cursor()
         cur.execute(f"update BREAD_CD set {op_key}={stamp} where USERID='{user_id}'")
         self.conn.commit()
 
+    @type_assert(object, "user_id", int, Action)
     def add_bread(self, user_id: str, add_num: int, action: Action = Action.BUY) -> int:
         """添加用户面包数量，可以添加已经吃了的面包数量，返回增加后的数量"""
         if action == Action.EAT:
@@ -161,6 +185,7 @@ class BreadDataManage:
         self.conn.commit()
         return new_num
 
+    @type_assert(object, "user_id", int, Action)
     def reduce_bread(self, user_id: str, red_num: int, action: Action = Action.BUY) -> int:
         """减少用户面包数量，可以减少已经吃的数量，返回减少后的数量"""
         if action == Action.EAT:
@@ -182,6 +207,7 @@ class BreadDataManage:
         self.conn.commit()
         return new_num
 
+    @type_assert(object, "user_id")
     def update_no(self, user_id: str) -> int:
         """更新用户排名并返回"""
         cur = self.conn.cursor()
@@ -214,6 +240,7 @@ class BreadDataManage:
         self.conn.commit()
         return now_no
 
+    @type_assert(object, "user_id")
     def get_bread_data(self, user_id: str) -> BreadData:
         """获取用户面包数据并返回"""
         cur = self.conn.cursor()
@@ -233,10 +260,9 @@ class BreadDataManage:
         self.conn.commit()
         return [BreadData(*item, level=item[3] // 10) for item in data]
 
+    @type_assert(object, "user_id", Action)
     def add_user_log(self, user_id: str, action: Action) -> int:
         """记录用户操作次数递增1并返回"""
-        if not isinstance(action, Action):
-            raise KeyError("the parameter operate must be Operate")
         op_key = self.LOG_COLUMN[action.value]
         cur = self.conn.cursor()
         cur.execute(f"select * from BREAD_LOG where USERID='{user_id}'")
@@ -247,10 +273,9 @@ class BreadDataManage:
         self.conn.commit()
         return log_times
 
+    @type_assert(object, "user_id", Action)
     def reduce_user_log(self, user_id: str, action: Action) -> int:
         """记录用户操作次数递减1并返回"""
-        if not isinstance(action, Action):
-            raise KeyError("the parameter operate must be Operate")
         op_key = self.LOG_COLUMN[action.value]
         cur = self.conn.cursor()
         cur.execute(f"select * from BREAD_LOG where USERID='{user_id}'")
@@ -261,6 +286,7 @@ class BreadDataManage:
         self.conn.commit()
         return log_times
 
+    @type_assert(object, "user_id")
     def get_log_data(self, user_id: str) -> LogData:
         """获取用户操作次数记录数据"""
         cur = self.conn.cursor()
@@ -269,6 +295,7 @@ class BreadDataManage:
         self.conn.commit()
         return LogData(*data)
 
+    @type_assert(object, Action)
     def get_action_log(self, action: Action) -> LogData:
         """获取某个操作次数最多用户的数据"""
         col = self.LOG_COLUMN[action.value]
