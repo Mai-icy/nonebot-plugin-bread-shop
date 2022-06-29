@@ -119,26 +119,30 @@ class BreadDataManage:
         """在数据库中创建用户并初始化"""
         new_id = self._get_id()
         c = self.conn.cursor()
-        c.execute(f"INSERT INTO BREAD_DATA (NO,USERID,BREAD_NUM,BREAD_EATEN) VALUES ({new_id},'{user_id}',0,0)")
-        c.execute(f"INSERT INTO BREAD_LOG (USERID,BUY_TIMES,EAT_TIMES,ROB_TIMES,GIVE_TIMES,BET_TIMES)"
-                  f" VALUES ('{user_id}',0,0,0,0,0)")
-        c.execute(f"INSERT INTO BREAD_CD (USERID,BUY_CD,EAT_CD,ROB_CD,GIVE_CD,BET_CD)"
-                  f" VALUES ('{user_id}',0,0,0,0,0)")
+        sql = f"INSERT INTO BREAD_DATA (NO,USERID,BREAD_NUM,BREAD_EATEN) VALUES (?,?,0,0)"
+        c.execute(sql, (new_id, user_id))
+        sql = f"INSERT INTO BREAD_LOG (USERID,BUY_TIMES,EAT_TIMES,ROB_TIMES,GIVE_TIMES,BET_TIMES)" \
+              f" VALUES (?,0,0,0,0,0)"
+        c.execute(sql, (user_id,))
+        sql = f"INSERT INTO BREAD_CD (USERID,BUY_CD,EAT_CD,ROB_CD,GIVE_CD,BET_CD) VALUES (?,0,0,0,0,0)"
+        c.execute(sql, (user_id,))
         self.conn.commit()
 
     @type_assert(object, "user_id", Action)
     def cd_refresh(self, user_id: str, action: Action) -> None:
         """刷新用户操作cd"""
         op_key = self.CD_COLUMN[action.value]
+        sql = f"update BREAD_CD set {op_key}=? where USERID=?"
         cur = self.conn.cursor()
-        cur.execute(f"update BREAD_CD set {op_key}={1} where USERID='{user_id}'")
+        cur.execute(sql, (1, user_id))
         self.conn.commit()
 
     @type_assert(object, "user_id", Action)
     def cd_get_stamp(self, user_id: str, action: Action) -> int:
         """获取用户上次操作时间戳"""
         cur = self.conn.cursor()
-        cur.execute(f"select * from BREAD_CD where USERID={user_id}")
+        sql = f"select * from BREAD_CD where USERID=?"
+        cur.execute(sql, (user_id,))
         result = cur.fetchone()
         if not result:
             self._create_user(user_id)
@@ -150,17 +154,19 @@ class BreadDataManage:
     def cd_ban_action(self, user_id: str, action: Action, ban_time) -> None:
         """禁止用户一段时间操作，单次延长cd，单位为秒"""
         op_key = self.CD_COLUMN[action.value]
+        sql = f"update BREAD_CD set {op_key}=? where USERID=?"
         cur = self.conn.cursor()
-        cur.execute(f"update BREAD_CD set {op_key}={int(time.time()) + ban_time} where USERID='{user_id}'")
+        cur.execute(sql, (int(time.time()) + ban_time, user_id))
         self.conn.commit()
 
     @type_assert(object, "user_id", Action)
     def cd_update_stamp(self, user_id: str, action: Action) -> None:
         """重置用户操作CD(重新开始记录冷却)"""
         op_key = self.CD_COLUMN[action.value]
+        sql = f"update BREAD_CD set {op_key}=? where USERID=?"
         stamp = int(time.time())
         cur = self.conn.cursor()
-        cur.execute(f"update BREAD_CD set {op_key}={stamp} where USERID='{user_id}'")
+        cur.execute(sql, (stamp, user_id))
         self.conn.commit()
 
     @type_assert(object, "user_id", int, Action)
@@ -171,7 +177,8 @@ class BreadDataManage:
         else:
             col_name = self.DATA_COLUMN[0]
         cur = self.conn.cursor()
-        cur.execute(f"select * from BREAD_DATA where USERID='{user_id}'")
+        sql = f"select * from BREAD_DATA where USERID=?"
+        cur.execute(sql, (user_id,))
         data = cur.fetchone()
         if not data:
             self._create_user(user_id)
@@ -181,7 +188,8 @@ class BreadDataManage:
         else:
             ori_num = data[2]
         new_num = ori_num + add_num
-        cur.execute(f"update BREAD_DATA set {col_name}={new_num} where USERID='{user_id}'")
+        sql = f"update BREAD_DATA set {col_name}=? where USERID=?"
+        cur.execute(sql, (new_num, user_id))
         self.conn.commit()
         return new_num
 
@@ -193,7 +201,8 @@ class BreadDataManage:
         else:
             col_name = self.DATA_COLUMN[0]
         cur = self.conn.cursor()
-        cur.execute(f"select * from BREAD_DATA where USERID='{user_id}'")
+        sql = "select * from BREAD_DATA where USERID=?"
+        cur.execute(sql, (user_id,))
         data = cur.fetchone()
         if not data:
             self._create_user(user_id)
@@ -203,7 +212,8 @@ class BreadDataManage:
         else:
             ori_num = data[2]
         new_num = ori_num - red_num
-        cur.execute(f"update BREAD_DATA set {col_name}={new_num} where USERID='{user_id}'")
+        sql = f"update BREAD_DATA set {col_name}=? where USERID=?"
+        cur.execute(sql, (new_num, user_id))
         self.conn.commit()
         return new_num
 
@@ -211,12 +221,13 @@ class BreadDataManage:
     def update_no(self, user_id: str) -> int:
         """更新用户排名并返回"""
         cur = self.conn.cursor()
-        cur.execute(f"select * from BREAD_DATA where USERID='{user_id}'")
+        sql = "select * from BREAD_DATA where USERID=?"
+        cur.execute(sql, (user_id,))
         data = cur.fetchone()
         now_no = data[0]
         user_num = (data[3] // 10, data[2])
         while now_no != 1:
-            cur.execute(f"select * from BREAD_DATA where NO={now_no - 1}")
+            cur.execute("select * from BREAD_DATA where NO=?", (now_no - 1,))
             data = cur.fetchone()
             up_num = (data[3] // 10, data[2])
             if user_num > up_num:
@@ -227,13 +238,13 @@ class BreadDataManage:
                 break
             now_no -= 1
         while now_no != self._get_id() - 1:
-            cur.execute(f"select * from BREAD_DATA where NO={now_no + 1}")
+            cur.execute("select * from BREAD_DATA where NO=?", (now_no + 1,))
             data = cur.fetchone()
             down_num = (data[3] // 10, data[2])
             if user_num < down_num:
-                cur.execute(f"update BREAD_DATA set NO={0} where NO={now_no}")
-                cur.execute(f"update BREAD_DATA set NO={now_no} where NO={now_no + 1}")
-                cur.execute(f"update BREAD_DATA set NO={now_no + 1} where NO={0}")
+                cur.execute("update BREAD_DATA set NO=? where NO=?", (0, now_no))
+                cur.execute("update BREAD_DATA set NO=? where NO=?", (now_no, now_no + 1))
+                cur.execute("update BREAD_DATA set NO=? where NO=?", (now_no + 1, 0))
             else:
                 break
             now_no += 1
@@ -244,7 +255,7 @@ class BreadDataManage:
     def get_bread_data(self, user_id: str) -> BreadData:
         """获取用户面包数据并返回"""
         cur = self.conn.cursor()
-        cur.execute(f"select * from BREAD_DATA where USERID='{user_id}'")
+        cur.execute("select * from BREAD_DATA where USERID=?", (user_id,))
         data = cur.fetchone()
         if not data:
             self._create_user(user_id)
@@ -265,11 +276,11 @@ class BreadDataManage:
         """记录用户操作次数递增1并返回"""
         op_key = self.LOG_COLUMN[action.value]
         cur = self.conn.cursor()
-        cur.execute(f"select * from BREAD_LOG where USERID='{user_id}'")
+        cur.execute("select * from BREAD_LOG where USERID=?", (user_id,))
         data = cur.fetchone()
         log_times = data[action.value + 1]
         log_times += 1
-        cur.execute(f"update BREAD_LOG set {op_key}={log_times} where USERID={user_id}")
+        cur.execute(f"update BREAD_LOG set {op_key}=? where USERID=?", (log_times, user_id))
         self.conn.commit()
         return log_times
 
@@ -278,11 +289,11 @@ class BreadDataManage:
         """记录用户操作次数递减1并返回"""
         op_key = self.LOG_COLUMN[action.value]
         cur = self.conn.cursor()
-        cur.execute(f"select * from BREAD_LOG where USERID='{user_id}'")
+        cur.execute("select * from BREAD_LOG where USERID=?", (user_id,))
         data = cur.fetchone()
         log_times = data[action.value + 1]
         log_times -= 1
-        cur.execute(f"update BREAD_LOG set {op_key}={log_times} where USERID={user_id}")
+        cur.execute(f"update BREAD_LOG set {op_key}=? where USERID=?", (log_times, user_id))
         self.conn.commit()
         return log_times
 
@@ -290,7 +301,7 @@ class BreadDataManage:
     def get_log_data(self, user_id: str) -> LogData:
         """获取用户操作次数记录数据"""
         cur = self.conn.cursor()
-        cur.execute(f"select * from BREAD_LOG where USERID='{user_id}'")
+        cur.execute(f"select * from BREAD_LOG where USERID=?", (user_id,))
         data = cur.fetchone()
         self.conn.commit()
         return LogData(*data)
@@ -300,7 +311,8 @@ class BreadDataManage:
         """获取某个操作次数最多用户的数据"""
         col = self.LOG_COLUMN[action.value]
         cur = self.conn.cursor()
-        cur.execute(f"SELECT * FROM BREAD_LOG WHERE {col}= (SELECT MAX({col}) FROM BREAD_LOG) LIMIT 1;")
+        sql = f"SELECT * FROM BREAD_LOG WHERE {col}= (SELECT MAX({col}) FROM BREAD_LOG) LIMIT 1;"
+        cur.execute(sql)
         data = cur.fetchone()
         self.conn.commit()
         return LogData(*data)
