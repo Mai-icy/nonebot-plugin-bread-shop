@@ -67,7 +67,7 @@ class BreadDataManage:
             BreadDataManage._has_init[group_id] = True
             self.database_path = DATABASE / group_id
             if not self.database_path.exists():
-                self.database_path.mkdir()
+                self.database_path.mkdir(parents=True)
                 self.database_path /= "bread.db"
                 self.conn = sqlite3.connect(self.database_path)
                 self._create_file()
