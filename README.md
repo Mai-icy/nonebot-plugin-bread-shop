@@ -54,9 +54,23 @@ pip install nonebot-plugin-bread-shop
 | 面包帮助 | 送指定用户随机数量面包 |breadhelp，helpb|
 | 面包排行 | 发送面包店操作指南 |breadtop，面包排名|
 
-## 🍞自定义配置
+## ⚙️自定义配置
 
 在**config.py**的枚举类中可以设置所有随机操作的最大值和最小值以及操作冷却。
+
+**参数说明**：
+
+**THING**：可修改默认的“面包”改为其他物品例如： “炸鸡”，“蛋糕”等等
+
+**BANNED_GROUPS**：设置黑名单群聊
+
+**CD**：操作冷却（单位：秒）
+
+**MAX**：操作随机值上限
+
+**MIN**：操作随机值下限
+
+## 🍞自定义事件
 
 在**bread_event.py**中可以编写特殊事件！
 
@@ -87,7 +101,7 @@ def 函数名(event: 操作):
 
 ```python
 @probability(0.1, Action.EAT, priority=5)
-def eat_event_much(event: Eat):
+def eat_event_much(event: EatEvent):
     if event.user_data.bread_num <= MAX.EAT.value:
         return
     eat_num = random.randint(MAX.EAT.value, min(MAX.EAT.value * 2, event.user_data.bread_num))
@@ -103,7 +117,7 @@ def eat_event_much(event: Eat):
 
 ```python
 @probability(1, Action.EAT, priority=1, group_id_list=["群号1", "群号2"])
-def closing_time(event: Eat):
+def closing_time(event: EatEvent):
     if 判断时间:
         event.bread_db.reduce_user_log(event.user_id, Action.EAT)  # 防止记录
     	return "打烊"

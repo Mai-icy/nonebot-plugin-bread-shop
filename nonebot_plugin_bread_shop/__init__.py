@@ -10,20 +10,20 @@ from nonebot.adapters.onebot.v11 import Bot, Event, Message
 from .bread_handle import BreadDataManage, Action
 from .bread_operate import *
 from .bread_event import rob_events, buy_events, eat_events, give_events, bet_events
-from .config import BANNED_GROUPS
+from .config import BANNED_GROUPS, THING
 
 
-bread_buy = on_command("bread_buy", aliases={"买面包", "buy", "🍞"}, priority=5)
-bread_eat = on_command("bread_eat", aliases={"吃面包", "啃面包", "eat", "🍞🍞"}, priority=5)
-bread_rob = on_command("bread_rob", aliases={"抢面包", "rob", "🍞🍞🍞"}, priority=5)
-bread_give = on_command("bread_give", aliases={"送面包", "give", "送"}, priority=5)
-bread_bet = on_command("bread_bet", aliases={"面包猜拳", "赌面包", "bet"}, priority=5)
+bread_buy = on_command("bread_buy", aliases={f"买{THING}", "buy", "🍞"}, priority=5)
+bread_eat = on_command("bread_eat", aliases={f"吃{THING}", f"啃{THING}", "eat", "🍞🍞"}, priority=5)
+bread_rob = on_command("bread_rob", aliases={f"抢{THING}", "rob", "🍞🍞🍞"}, priority=5)
+bread_give = on_command("bread_give", aliases={f"送{THING}", "give", "送"}, priority=5)
+bread_bet = on_command("bread_bet", aliases={f"{THING}猜拳", f"赌{THING}", "bet"}, priority=5)
 
-bread_log = on_command("bread_log", aliases={"面包记录", "记录", "logb"}, priority=5)
-bread_check = on_command("bread_check", aliases={"偷看面包", "查看面包", "check"}, priority=5)
-bread_top = on_command("bread_top", aliases={"面包排行", "breadtop", "面包排名"}, priority=5)
+bread_log = on_command("bread_log", aliases={f"{THING}记录", "记录", "logb"}, priority=5)
+bread_check = on_command("bread_check", aliases={f"偷看{THING}", f"查看{THING}", "check"}, priority=5)
+bread_top = on_command("bread_top", aliases={f"{THING}排行", "breadtop", f"{THING}排名"}, priority=5)
 
-bread_help = on_command("bread_help", aliases={"面包帮助", "breadhelp", "helpb"}, priority=5)
+bread_help = on_command("bread_help", aliases={f"{THING}帮助", "breadhelp", "helpb"}, priority=5)
 
 
 EatEvent.add_events(eat_events)
@@ -40,15 +40,15 @@ async def _(event: Event, bot: Bot):
 
     group_id = await get_group_id(event.get_session_id())
     if group_id in BANNED_GROUPS:
-        await bot.send(event=event, message="本群已禁止面包店！请联系bot管理员！")
+        await bot.send(event=event, message=f"本群已禁止{THING}店！请联系bot管理员！")
         return
 
     wait_time = cd_wait_time(group_id, user_qq, Action.BUY)
     if wait_time > 0:
         data = BreadDataManage(group_id).get_bread_data(user_qq)
-        msg_txt = f"您还得等待{wait_time // 60}分钟才能买面包w，现在一共拥有{data.bread_num}个面包！您的面包排名为:{data.no}"
+        msg_txt = f"您还得等待{wait_time // 60}分钟才能买{THING}w，现在一共拥有{data.bread_num}个{THING}！您的{THING}排名为:{data.no}"
     elif wait_time < 0:
-        msg_txt = f"你被禁止购买面包啦！{(abs(wait_time)+ CD.BUY.value) // 60}分钟后才能购买！"
+        msg_txt = f"你被禁止购买{THING}啦！{(abs(wait_time)+ CD.BUY.value) // 60}分钟后才能购买！"
     else:
         event_ = BuyEvent(group_id)
         event_.set_user_id(user_qq)
@@ -65,15 +65,15 @@ async def _(event: Event, bot: Bot):
 
     group_id = await get_group_id(event.get_session_id())
     if group_id in BANNED_GROUPS:
-        await bot.send(event=event, message="本群已禁止面包店！请联系bot管理员！")
+        await bot.send(event=event, message=f"本群已禁止{THING}店！请联系bot管理员！")
         return
 
     wait_time = cd_wait_time(group_id, user_qq, Action.EAT)
     if wait_time > 0:
         data = BreadDataManage(group_id).get_bread_data(user_qq)
-        msg_txt = f"您还得等待{wait_time // 60}分钟才能吃面包w，现在你的等级是Lv.{data.bread_eaten // 10}！您的面包排名为:{data.no}"
+        msg_txt = f"您还得等待{wait_time // 60}分钟才能吃{THING}w，现在你的等级是Lv.{data.bread_eaten // 10}！您的{THING}排名为:{data.no}"
     elif wait_time < 0:
-        msg_txt = f"你被禁止吃面包啦！{(abs(wait_time)+ CD.EAT.value) // 60}分钟后才能吃哦！"
+        msg_txt = f"你被禁止吃{THING}啦！{(abs(wait_time)+ CD.EAT.value) // 60}分钟后才能吃哦！"
     else:
         event_ = EatEvent(group_id)
         event_.set_user_id(user_qq)
@@ -90,7 +90,7 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg()):
 
     group_id = await get_group_id(event.get_session_id())
     if group_id in BANNED_GROUPS:
-        await bot.send(event=event, message="本群已禁止面包店！请联系bot管理员！")
+        await bot.send(event=event, message=f"本群已禁止{THING}店！请联系bot管理员！")
         return
 
     robbed_qq = None
@@ -103,9 +103,9 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg()):
 
     wait_time = cd_wait_time(group_id, user_qq, Action.ROB)
     if wait_time > 0:
-        msg_txt = f"您还得等待{wait_time // 60}分钟才能抢面包w"
+        msg_txt = f"您还得等待{wait_time // 60}分钟才能抢{THING}w"
     elif wait_time < 0:
-        msg_txt = f"你被禁止抢面包啦！{(abs(wait_time)+ CD.ROB.value) // 60}分钟后才能抢哦！"
+        msg_txt = f"你被禁止抢{THING}啦！{(abs(wait_time) + CD.ROB.value) // 60}分钟后才能抢哦！"
     else:
         event_ = RobEvent(group_id)
         event_.set_user_id(user_qq)
@@ -123,7 +123,7 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg()):
 
     group_id = await get_group_id(event.get_session_id())
     if group_id in BANNED_GROUPS:
-        await bot.send(event=event, message="本群已禁止面包店！请联系bot管理员！")
+        await bot.send(event=event, message="本群已禁止{THING}店！请联系bot管理员！")
         return
 
     robbed_qq = None
@@ -136,9 +136,9 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg()):
 
     wait_time = cd_wait_time(group_id, user_qq, Action.GIVE)
     if wait_time > 0:
-        msg_txt = f"您还得等待{wait_time // 60}分钟才能送面包w"
+        msg_txt = f"您还得等待{wait_time // 60}分钟才能送{THING}w"
     elif wait_time < 0:
-        msg_txt = f"你被禁止送面包啦！{(abs(wait_time)+ CD.GIVE.value) // 60}分钟后才能赠送哦！"
+        msg_txt = f"你被禁止送{THING}啦！{(abs(wait_time) + CD.GIVE.value) // 60}分钟后才能赠送哦！"
     else:
         event_ = GiveEvent(group_id)
         event_.set_user_id(user_qq)
@@ -155,7 +155,7 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg()):
     msg_at = Message(f"[CQ:at,qq={user_qq}]")
     group_id = await get_group_id(event.get_session_id())
     if group_id in BANNED_GROUPS:
-        await bot.send(event=event, message="本群已禁止面包店！请联系bot管理员！")
+        await bot.send(event=event, message=f"本群已禁止{THING}店！请联系bot管理员！")
         return
 
     wait_time = cd_wait_time(group_id, user_qq, Action.BET)
@@ -164,7 +164,7 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg()):
         await bot.send(event=event, message=msg_at + msg_txt)
         return
     elif wait_time < 0:
-        msg_txt = f"你被禁止猜拳啦！{(abs(wait_time)+ CD.BET.value) // 60}分钟后才能猜拳哦！"
+        msg_txt = f"你被禁止猜拳啦！{(abs(wait_time) + CD.BET.value) // 60}分钟后才能猜拳哦！"
         await bot.send(event=event, message=msg_at + msg_txt)
         return
     else:
@@ -196,7 +196,7 @@ async def _(event: Event, bot: Bot, args: Message = CommandArg()):
 
     group_id = await get_group_id(event.get_session_id())
     if group_id in BANNED_GROUPS:
-        await bot.send(event=event, message="本群已禁止面包店！请联系bot管理员！")
+        await bot.send(event=event, message=f"本群已禁止{THING}店！请联系bot管理员！")
         return
 
     checked_qq = user_qq
@@ -205,11 +205,11 @@ async def _(event: Event, bot: Bot, args: Message = CommandArg()):
             checked_qq = arg.data.get("qq", "")
     if checked_qq == user_qq:
         user_data = BreadDataManage(group_id).get_bread_data(user_qq)
-        msg = f"你现在拥有{user_data.bread_num}个面包，等级为Lv.{user_data.level}，排名为{user_data.no}！"
+        msg = f"你现在拥有{user_data.bread_num}个{THING}，等级为Lv.{user_data.level}，排名为{user_data.no}！"
     else:
         checked_name = await get_nickname(bot, checked_qq, group_id)
         checked_data = BreadDataManage(group_id).get_bread_data(checked_qq)
-        msg = f"{checked_name} 现在拥有{checked_data.bread_num}个面包，等级为Lv.{checked_data.level}，排名为{checked_data.no}！"
+        msg = f"{checked_name} 现在拥有{checked_data.bread_num}个{THING}，等级为Lv.{checked_data.level}，排名为{checked_data.no}！"
 
     await bot.send(event=event, message=msg_at + msg)
 
@@ -221,7 +221,7 @@ async def _(event: Event, bot: Bot, args: Message = CommandArg()):
 
     group_id = await get_group_id(event.get_session_id())
     if group_id in BANNED_GROUPS:
-        await bot.send(event=event, message="本群已禁止面包店！请联系bot管理员！")
+        await bot.send(event=event, message=f"本群已禁止{THING}店！请联系bot管理员！")
         return
 
     add_arg = args.extract_plain_text()
@@ -262,20 +262,20 @@ async def _(event: Event, bot: Bot, args: Message = CommandArg()):
 async def _(event: Event, bot: Bot):
     group_id = await get_group_id(event.get_session_id())
     if group_id in BANNED_GROUPS:
-        await bot.send(event=event, message="本群已禁止面包店！请联系bot管理员！")
+        await bot.send(event=event, message=f"本群已禁止{THING}店！请联系bot管理员！")
         return
 
-    msg = """       🍞商店使用说明🍞
+    msg = f"""       🍞商店使用说明🍞
 指令	        说明
-买面包    	购买随机面包
-啃面包	    吃随机面包
-抢面包+@	  抢随机面包
-送面包+@	  送随机面包
-赌面包+""	猜拳赌随机面包
-面包记录+""   查看操作次数最多的人
-面包记录+@    查看操作次数
-查看面包+@    查看面包数据
-面包排行	    本群排行榜top5
+买{THING}    	购买随机{THING}
+啃{THING}	    吃随机{THING}
+抢{THING}+@	  抢随机{THING}
+送{THING}+@	  送随机{THING}
+赌{THING}+""	猜拳赌随机{THING}
+{THING}记录+""   查看操作次数最多的人
+{THING}记录+@    查看操作次数
+查看{THING}+@    查看{THING}数据
+{THING}排行	    本群排行榜top5
 更多详情见本项目地址：
 https://github.com/Mai-icy/nonebot-plugin-bread-shop"""
     await bot.send(event=event, message=msg)
@@ -285,7 +285,7 @@ https://github.com/Mai-icy/nonebot-plugin-bread-shop"""
 async def _(bot: Bot, event: Event):
     group_id = await get_group_id(event.get_session_id())
     if group_id in BANNED_GROUPS:
-        await bot.send(event=event, message="本群已禁止面包店！请联系bot管理员！")
+        await bot.send(event=event, message=f"本群已禁止{THING}店！请联系bot管理员！")
         return
     msg = await get_group_top(bot, group_id)
     await bot.send(event=event, message=msg)
@@ -302,12 +302,12 @@ async def get_group_top(bot: Bot, group_id) -> Message:
     user_id_list = {info['user_id'] for info in group_member_list}
     all_data = BreadDataManage(group_id).get_all_data()
     num = 0
-    append_text = "🍞本群面包排行top5！🍞\n"
+    append_text = f"🍞本群{THING}排行top5！🍞\n"
     for data in all_data:
         if int(data.user_id) in user_id_list:
             num += 1
             name = await get_nickname(bot, data.user_id, group_id)
-            append_text += f"top{num} : {name} Lv.{data.bread_eaten // 10}，拥有面包{data.bread_num}个\n"
+            append_text += f"top{num} : {name} Lv.{data.bread_eaten // 10}，拥有{THING}{data.bread_num}个\n"
         if num == 5:
             break
     append_text += "大家继续加油w！"

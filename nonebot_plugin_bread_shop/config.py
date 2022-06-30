@@ -2,6 +2,9 @@
 # -*- coding:utf-8 -*-
 from enum import Enum
 
+# 自定义物品，改掉默认的”面包“
+THING = "面包"
+
 # 被禁止的群聊
 BANNED_GROUPS = []
 
