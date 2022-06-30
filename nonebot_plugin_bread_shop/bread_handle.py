@@ -28,7 +28,7 @@ LogData = namedtuple("LogData", ["user_id", "buy_times", "eat_times", "rob_times
 
 
 def type_assert(*ty_args, **ty_kwargs):
-    """sql类型检查，防SQL注入（虽然没有直接操作并不能注入）"""
+    """sql类型检查"""
     def decorate(func):
         sig = signature(func)
         bound_types = sig.bind_partial(*ty_args, **ty_kwargs).arguments
@@ -134,6 +134,13 @@ class BreadDataManage:
     @type_assert(object, "user_id", Action)
     def cd_refresh(self, user_id: str, action: Action) -> None:
         """刷新用户操作cd"""
+        if action == Action.ALL:
+            cur = self.conn.cursor()
+            for key in self.CD_COLUMN:
+                sql = f"update BREAD_CD set {key}=? where USERID=?"
+                cur.execute(sql, (1, user_id))
+            self.conn.commit()
+            return
         op_key = self.CD_COLUMN[action.value]
         sql = f"update BREAD_CD set {op_key}=? where USERID=?"
         cur = self.conn.cursor()

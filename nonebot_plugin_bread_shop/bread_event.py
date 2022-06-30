@@ -14,6 +14,7 @@ give_events = []
 bet_events = []
 
 
+# 特殊事件修饰器
 def probability(value, action: Action, *, priority: int = 5, group_id_list: list = None):
     def wrapper(func):
         @wraps(func)
