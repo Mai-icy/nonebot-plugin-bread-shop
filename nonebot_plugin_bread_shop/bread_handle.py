@@ -15,6 +15,7 @@ DATABASE = Path() / "data" / "bread"
 
 
 class Action(Enum):
+    ALL = -1
     BUY = 0
     EAT = 1
     ROB = 2
