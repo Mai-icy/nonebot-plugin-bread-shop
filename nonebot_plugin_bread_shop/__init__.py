@@ -10,7 +10,7 @@ from nonebot.adapters.onebot.v11 import Bot, Event, Message
 from .bread_handle import BreadDataManage, Action
 from .bread_operate import *
 from .bread_event import rob_events, buy_events, eat_events, give_events, bet_events
-from .config import BANNED_GROUPS, THING
+from .config import BANNED_GROUPS, THING, LEVEL_NUM
 
 
 bread_buy = on_command("bread_buy", aliases={f"买{THING}", "buy", "🍞"}, priority=5)
@@ -71,7 +71,7 @@ async def _(event: Event, bot: Bot):
     wait_time = cd_wait_time(group_id, user_qq, Action.EAT)
     if wait_time > 0:
         data = BreadDataManage(group_id).get_bread_data(user_qq)
-        msg_txt = f"您还得等待{wait_time // 60}分钟才能吃{THING}w，现在你的等级是Lv.{data.bread_eaten // 10}！您的{THING}排名为:{data.no}"
+        msg_txt = f"您还得等待{wait_time // 60}分钟才能吃{THING}w，现在你的等级是Lv.{data.bread_eaten // LEVEL_NUM}！您的{THING}排名为:{data.no}"
     elif wait_time < 0:
         msg_txt = f"你被禁止吃{THING}啦！{(abs(wait_time)+ CD.EAT.value) // 60}分钟后才能吃哦！"
     else:
@@ -307,7 +307,7 @@ async def get_group_top(bot: Bot, group_id) -> Message:
         if int(data.user_id) in user_id_list:
             num += 1
             name = await get_nickname(bot, data.user_id, group_id)
-            append_text += f"top{num} : {name} Lv.{data.bread_eaten // 10}，拥有{THING}{data.bread_num}个\n"
+            append_text += f"top{num} : {name} Lv.{data.bread_eaten // LEVEL_NUM}，拥有{THING}{data.bread_num}个\n"
         if num == 5:
             break
     append_text += "大家继续加油w！"

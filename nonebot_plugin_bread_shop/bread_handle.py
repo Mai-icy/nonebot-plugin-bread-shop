@@ -9,6 +9,8 @@ from inspect import signature
 from pathlib import Path
 from typing import List
 
+from config import LEVEL_NUM
+
 DATABASE = Path() / "data" / "bread"
 
 
@@ -151,6 +153,15 @@ class BreadDataManage:
         return result[action.value + 1]
 
     @type_assert(object, "user_id", Action, int)
+    def cd_reduce_action(self, user_id: str, action: Action, reduce_time) -> None:
+        """单次剪短cd，单位为秒"""
+        op_key = self.CD_COLUMN[action.value]
+        sql = f"update BREAD_CD set {op_key}=? where USERID=?"
+        cur = self.conn.cursor()
+        cur.execute(sql, (int(time.time()) - reduce_time, user_id))
+        self.conn.commit()
+
+    @type_assert(object, "user_id", Action, int)
     def cd_ban_action(self, user_id: str, action: Action, ban_time) -> None:
         """禁止用户一段时间操作，单次延长cd，单位为秒"""
         op_key = self.CD_COLUMN[action.value]
@@ -225,11 +236,11 @@ class BreadDataManage:
         cur.execute(sql, (user_id,))
         data = cur.fetchone()
         now_no = data[0]
-        user_num = (data[3] // 10, data[2])
+        user_num = (data[3] // LEVEL_NUM, data[2])
         while now_no != 1:
             cur.execute("select * from BREAD_DATA where NO=?", (now_no - 1,))
             data = cur.fetchone()
-            up_num = (data[3] // 10, data[2])
+            up_num = (data[3] // LEVEL_NUM, data[2])
             if user_num > up_num:
                 cur.execute(f"update BREAD_DATA set NO={0} where NO={now_no}")
                 cur.execute(f"update BREAD_DATA set NO={now_no} where NO={now_no - 1}")
@@ -240,7 +251,7 @@ class BreadDataManage:
         while now_no != self._get_id() - 1:
             cur.execute("select * from BREAD_DATA where NO=?", (now_no + 1,))
             data = cur.fetchone()
-            down_num = (data[3] // 10, data[2])
+            down_num = (data[3] // LEVEL_NUM, data[2])
             if user_num < down_num:
                 cur.execute("update BREAD_DATA set NO=? where NO=?", (0, now_no))
                 cur.execute("update BREAD_DATA set NO=? where NO=?", (now_no, now_no + 1))
@@ -261,7 +272,7 @@ class BreadDataManage:
             self._create_user(user_id)
             data = (0, user_id, 0, 0, 0, 0)
         self.conn.commit()
-        return BreadData(*data, level=data[3] // 10)
+        return BreadData(*data, level=data[3] // LEVEL_NUM)
 
     def get_all_data(self) -> List[BreadData]:
         """获取一个数据库内的所有用户数据"""
@@ -269,7 +280,7 @@ class BreadDataManage:
         cur.execute(f"select * from BREAD_DATA")
         data = cur.fetchall()
         self.conn.commit()
-        return [BreadData(*item, level=item[3] // 10) for item in data]
+        return [BreadData(*item, level=item[3] // LEVEL_NUM) for item in data]
 
     @type_assert(object, "user_id", Action)
     def add_user_log(self, user_id: str, action: Action) -> int:
