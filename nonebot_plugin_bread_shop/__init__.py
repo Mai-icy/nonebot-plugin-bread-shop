@@ -123,7 +123,7 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg()):
 
     group_id = await get_group_id(event.get_session_id())
     if group_id in BANNED_GROUPS:
-        await bot.send(event=event, message="本群已禁止{THING}店！请联系bot管理员！")
+        await bot.send(event=event, message=f"本群已禁止{THING}店！请联系bot管理员！")
         return
 
     robbed_qq = None
