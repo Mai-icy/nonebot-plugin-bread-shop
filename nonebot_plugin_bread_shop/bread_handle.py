@@ -9,7 +9,7 @@ from inspect import signature
 from pathlib import Path
 from typing import List
 
-from config import LEVEL_NUM
+from .config import LEVEL_NUM
 
 DATABASE = Path() / "data" / "bread"
 
