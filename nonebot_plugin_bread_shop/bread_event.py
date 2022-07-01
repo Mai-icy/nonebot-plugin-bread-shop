@@ -272,26 +272,9 @@ def bet_event_police(event: BetEvent):
     return append_text
 
 
-@probability(0.2, Action.BET, priority=4)
-def bet_event_big(event: RobEvent):
-    if event.user_data.bread_num < 70:
-        return
-    ori_num = event.user_data.bread_num
-    append_text = f"你{THING}这么多！多来了几把，"
-    for _ in range(4):
-        event.normal_event()
-    now_num = event.user_data.bread_num
-    delta_num = abs(ori_num - now_num)
-    event.bread_db.cd_update_stamp(event.user_id, Action.BET)
-    if ori_num > now_num:
-        return append_text + f"你一共损失了{delta_num}个面包！"
-    else:
-        return append_text + f"你一共获得了{delta_num}个面包！"
-
-
 @probability(0.04, Action.BET, priority=5)
-def bet_event_cheat(event: RobEvent):
-    loss_num = random.randint(MIN.ROB.value, min(event.user_data.bread_num, MAX.BET.value))
+def bet_event_cheat(event: BetEvent):
+    loss_num = event.bet_num
     append_text = f"我出三只手！石头剪刀布！你输啦！给我{loss_num}个{THING}！"
     event.bread_db.reduce_bread(event.user_id, loss_num)
     event.bread_db.update_no(event.user_id)

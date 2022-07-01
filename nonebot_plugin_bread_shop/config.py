@@ -37,3 +37,11 @@ class MIN(Enum):
     ROB = 1
     GIVE = 1
     BET = 5
+
+
+def random_config():
+    """设置操作数量是否由用户指定或随机"""
+    from .bread_operate import BuyEvent, EatEvent, RobEvent, GiveEvent, BetEvent
+    # GiveEvent("群号").set_random(False)  # 取消随机（变为用户指定，用户若没有指定则为随机）
+    # GiveEvent.set_random_global(False)  # 默认全为True
+    # BetEvent.set_random_global(False)  # 其它事件均可设置

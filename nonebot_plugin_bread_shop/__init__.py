@@ -10,7 +10,7 @@ from nonebot.adapters.onebot.v11 import Bot, Event, Message
 from .bread_handle import BreadDataManage, Action
 from .bread_operate import *
 from .bread_event import rob_events, buy_events, eat_events, give_events, bet_events
-from .config import BANNED_GROUPS, THING, LEVEL_NUM
+from .config import BANNED_GROUPS, THING, LEVEL_NUM, random_config
 
 
 bread_buy = on_command("bread_buy", aliases={f"买{THING}", "buy", "🍞"}, priority=5)
@@ -32,15 +32,23 @@ RobEvent.add_events(rob_events)
 GiveEvent.add_events(give_events)
 BetEvent.add_events(bet_events)
 
+random_config()
+
 
 @bread_buy.handle()
-async def _(event: Event, bot: Bot):
+async def _(event: Event, bot: Bot, args: Message = CommandArg()):
     user_qq = event.get_user_id()
     msg_at = Message(f"[CQ:at,qq={user_qq}]")
 
     group_id = await get_group_id(event.get_session_id())
     if group_id in BANNED_GROUPS:
         await bot.send(event=event, message=f"本群已禁止{THING}店！请联系bot管理员！")
+        return
+
+    try:
+        buy_num = get_num_arg(args.extract_plain_text(), BuyEvent, group_id)
+    except ArgsError as e:
+        await bot.send(event=event, message=str(e))
         return
 
     wait_time = cd_wait_time(group_id, user_qq, Action.BUY)
@@ -52,20 +60,26 @@ async def _(event: Event, bot: Bot):
     else:
         event_ = BuyEvent(group_id)
         event_.set_user_id(user_qq)
-        msg_txt = event_.execute()
+        msg_txt = event_.execute(buy_num)
 
     res_msg = msg_at + Message(msg_txt)
     await bot.send(event=event, message=res_msg)
 
 
 @bread_eat.handle()
-async def _(event: Event, bot: Bot):
+async def _(event: Event, bot: Bot, args: Message = CommandArg()):
     user_qq = event.get_user_id()
     msg_at = Message(f"[CQ:at,qq={user_qq}]")
 
     group_id = await get_group_id(event.get_session_id())
     if group_id in BANNED_GROUPS:
         await bot.send(event=event, message=f"本群已禁止{THING}店！请联系bot管理员！")
+        return
+
+    try:
+        eat_num = get_num_arg(args.extract_plain_text(), EatEvent, group_id)
+    except ArgsError as e:
+        await bot.send(event=event, message=str(e))
         return
 
     wait_time = cd_wait_time(group_id, user_qq, Action.EAT)
@@ -77,7 +91,7 @@ async def _(event: Event, bot: Bot):
     else:
         event_ = EatEvent(group_id)
         event_.set_user_id(user_qq)
-        msg_txt = event_.execute()
+        msg_txt = event_.execute(eat_num)
 
     res_msg = msg_at + Message(msg_txt)
     await bot.send(event=event, message=res_msg)
@@ -94,9 +108,18 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg()):
         return
 
     robbed_qq = None
+    rob_num = None
     for arg in args:
         if arg.type == "at":
             robbed_qq = arg.data.get("qq", "")
+        if arg.type == "text":
+            text = arg.data.get("text")
+            try:
+                rob_num = get_num_arg(text, RobEvent, group_id)
+            except ArgsError as e:
+                await bot.send(event=event, message=str(e))
+                return
+
     if not robbed_qq:
         return
     robbed_name = await get_nickname(bot, robbed_qq, group_id)
@@ -110,7 +133,7 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg()):
         event_ = RobEvent(group_id)
         event_.set_user_id(user_qq)
         event_.set_robbed_id(robbed_qq, robbed_name)
-        msg_txt = event_.execute()
+        msg_txt = event_.execute(rob_num)
 
     res_msg = msg_at + msg_txt
     await bot.send(event=event, message=res_msg)
@@ -126,13 +149,22 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg()):
         await bot.send(event=event, message=f"本群已禁止{THING}店！请联系bot管理员！")
         return
 
-    robbed_qq = None
+    given_qq = None
+    give_num = None
     for arg in args:
         if arg.type == "at":
-            robbed_qq = arg.data.get("qq", "")
-    if not robbed_qq:
+            given_qq = arg.data.get("qq", "")
+        if arg.type == "text":
+            text = arg.data.get("text")
+            try:
+                give_num = get_num_arg(text, GiveEvent, group_id)
+            except ArgsError as e:
+                await bot.send(event=event, message=str(e))
+                return
+
+    if not given_qq:
         return
-    robbed_name = await get_nickname(bot, robbed_qq, group_id)
+    given_name = await get_nickname(bot, given_qq, group_id)
 
     wait_time = cd_wait_time(group_id, user_qq, Action.GIVE)
     if wait_time > 0:
@@ -142,8 +174,8 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg()):
     else:
         event_ = GiveEvent(group_id)
         event_.set_user_id(user_qq)
-        event_.set_given_id(robbed_qq, robbed_name)
-        msg_txt = event_.execute()
+        event_.set_given_id(given_qq, given_name)
+        msg_txt = event_.execute(give_num)
 
     res_msg = msg_at + msg_txt
     await bot.send(event=event, message=res_msg)
@@ -168,7 +200,16 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg()):
         await bot.send(event=event, message=msg_at + msg_txt)
         return
     else:
-        ges = args.extract_plain_text()
+        texts = args.extract_plain_text().split()
+        ges = texts[0]
+        bet_num = None
+        if len(texts) == 2:
+            bet_txt = texts[1]
+            try:
+                bet_num = get_num_arg(bet_txt, BetEvent, group_id)
+            except ArgsError as e:
+                await bot.send(event=event, message=str(e))
+                return
 
         if ges not in ["石头", "剪刀", "布"]:
             await bot.send(event=event, message=f"没有{ges}这种东西啦！请输入“石头”或“剪刀”或“布”！例如 ’/bet 石头‘ ")
@@ -183,7 +224,7 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg()):
         event_ = BetEvent(group_id)
         event_.set_user_id(user_qq)
         event_.set_user_gestures(ges_)
-        msg_txt = event_.execute()
+        msg_txt = event_.execute(bet_num)
 
         res_msg = msg_at + msg_txt
         await bread_bet.finish(res_msg)
@@ -325,3 +366,21 @@ async def get_nickname(bot: Bot, user_id, group_id=None):
         info = await bot.get_stranger_info(user_id=int(user_id))
         other_name = info.get("nickname", "")
     return other_name
+
+
+def get_num_arg(text, event_type, group_id):
+    if text:
+        text = text.strip()
+        print(text)
+        if event_type(group_id).is_random():
+            raise ArgsError("本群不可指定其它参数！请正确使用'@'")
+        elif not text.isdigit():
+            raise ArgsError("请输入数字！")
+        else:
+            return int(text)
+    else:
+        return None
+
+
+class ArgsError(ValueError):
+    pass

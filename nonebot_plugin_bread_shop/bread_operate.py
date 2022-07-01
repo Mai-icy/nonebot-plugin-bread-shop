@@ -22,6 +22,8 @@ class _Event:
     _instance = {}
     _has_init = {}
     _public_events = []
+    _is_random = {}
+    _is_random_global = True
 
     def __new__(cls, group_id: str):
         if group_id is None:
@@ -52,6 +54,19 @@ class _Event:
         for func in func_list:
             cls.add_event(func)
 
+    @classmethod
+    def set_random_global(cls, flag):
+        cls._is_random_global = flag
+
+    def set_random(self, flag):
+        self._is_random[self.group_id] = flag
+
+    def is_random(self):
+        if self._is_random.get(self.group_id) is not None:
+            return self._is_random.get(self.group_id)
+        else:
+            return self._is_random_global
+
     def _special_event(self):
         """按照优先级排布，同优先级随机排布"""
         events = self._private_events + self._public_events
@@ -65,13 +80,13 @@ class _Event:
         self.user_id = user_id
         self.user_data = self.bread_db.get_bread_data(self.user_id)
 
-    def execute(self):
+    def execute(self, num=None):
         pass
 
     def normal_event(self):
         pass
 
-    def _pre_judge_random(self):
+    def _pre_judge_random(self, num=None):
         pass
 
 
@@ -79,9 +94,14 @@ class BuyEvent(_Event):
     _instance = {}
     _has_init = {}
     _public_events = []
+    _is_random = {}
+    _is_random_global = True
 
-    def execute(self):
-        self._pre_judge_random()
+    def execute(self, num=None):
+        pre_error = self._pre_judge_random(num)
+        if pre_error:
+            return pre_error
+
         return_data = self._special_event()
         self.bread_db.add_user_log(self.user_id, Action.BUY)
         if return_data:
@@ -96,20 +116,31 @@ class BuyEvent(_Event):
         self.bread_db.cd_update_stamp(self.user_id, Action.BUY)
         return append_text
 
-    def _pre_judge_random(self):
-        self.buy_num = random.randint(MIN.BUY.value, MAX.BUY.value)
+    def _pre_judge_random(self, num=None):
+        if not self.is_random() and num is not None:
+            if MIN.BUY.value <= num <= MAX.BUY.value:
+                self.buy_num = num
+                return
+            else:
+                return "数量和限制不符！"
+        self.buy_num = random.randint(MIN.BUY.value, min(MAX.BUY.value, self.user_data.bread_num))
 
 
 class EatEvent(_Event):
     _instance = {}
     _has_init = {}
     _public_events = []
+    _is_random = {}
+    _is_random_global = True
 
-    def execute(self):
-        if self.user_data.bread_num < MIN.EAT.value:
+    def execute(self, num=None):
+        if self.user_data.bread_num < MIN.EAT.value or (num and self.user_data.bread_num < num):
             append_text = f"你的{THING}还不够吃w，来买一些{THING}吧！"
             return append_text
-        self._pre_judge_random()
+
+        pre_error = self._pre_judge_random(num)
+        if pre_error:
+            return pre_error
 
         return_data = self._special_event()
         self.bread_db.add_user_log(self.user_id, Action.EAT)
@@ -126,7 +157,13 @@ class EatEvent(_Event):
         self.bread_db.update_no(self.user_id)
         return append_text
 
-    def _pre_judge_random(self):
+    def _pre_judge_random(self, num=None):
+        if not self.is_random() and num is not None:
+            if MIN.EAT.value <= num <= MAX.EAT.value:
+                self.eat_num = num
+                return
+            else:
+                return "数量和限制不符！"
         self.eat_num = random.randint(MIN.EAT.value, min(MAX.EAT.value, self.user_data.bread_num))
 
 
@@ -134,6 +171,8 @@ class RobEvent(_Event):
     _instance = {}
     _has_init = {}
     _public_events = []
+    _is_random = {}
+    _is_random_global = True
 
     def __init__(self, group_id: str):
         super().__init__(group_id)
@@ -146,12 +185,15 @@ class RobEvent(_Event):
         self.robbed_name = robbed_name
         self.robbed_data = self.bread_db.get_bread_data(robbed_id)
 
-    def execute(self):
-        if not self.robbed_data or self.robbed_data.bread_num < MIN.ROB.value:
-            append_text = f"{self.robbed_name}没有{THING}可抢呜"
+    def execute(self, num=None):
+        if not self.robbed_data or self.robbed_data.bread_num < MIN.ROB.value\
+                or (num and self.robbed_data.bread_num < num):
+            append_text = f"{self.robbed_name}没有那么多{THING}可抢呜"
             return append_text
 
-        self._pre_judge_random()
+        pre_error = self._pre_judge_random(num)
+        if pre_error:
+            return pre_error
 
         if self.user_id == self.robbed_id:
             append_text = f"这么想抢自己哇，那我帮你抢！抢了你{self.rob_num}个{THING}嘿嘿！"
@@ -178,14 +220,22 @@ class RobEvent(_Event):
         self.bread_db.cd_update_stamp(self.user_id, Action.ROB)
         return append_text
 
-    def _pre_judge_random(self):
-        self.rob_num = random.randint(MIN.ROB.value, min(MAX.ROB.value, self.robbed_data.bread_num))
+    def _pre_judge_random(self, num=None):
+        if not self.is_random() and num is not None:
+            if MIN.ROB.value <= num <= MAX.ROB.value:
+                self.rob_num = num
+                return
+            else:
+                return "数量和限制不符！"
+        self.rob_num = random.randint(MIN.ROB.value, min(MAX.ROB.value, self.user_data.bread_num))
 
 
 class GiveEvent(_Event):
     _instance = {}
     _has_init = {}
     _public_events = []
+    _is_random = {}
+    _is_random_global = True
 
     def __init__(self, group_id):
         super().__init__(group_id)
@@ -198,18 +248,20 @@ class GiveEvent(_Event):
         self.given_name = robbed_name
         self.given_data = self.bread_db.get_bread_data(robbed_id)
 
-    def execute(self):
-        if self.user_data.bread_num < MIN.GIVE.value:
+    def execute(self, num=None):
+        if self.user_data.bread_num < MIN.GIVE.value or (num and self.user_data.bread_num < num):
             append_text = f"你的{THING}还不够赠送w，来买一些{THING}吧！"
             return append_text
 
-        self._pre_judge_random()
+        pre_error = self._pre_judge_random(num)
+        if pre_error:
+            return pre_error
 
         if self.user_id == self.given_id:
             append_text = f"送给自己肯定是不行的啦！送给我叭！你送了我{self.give_num}个{THING}嘿嘿！"
             self.bread_db.reduce_bread(self.user_id, self.give_num)
             self.bread_db.update_no(self.user_id)
-            self.bread_db.cd_update_stamp(self.user_id, Action.ROB)
+            self.bread_db.cd_update_stamp(self.user_id, Action.GIVE)
             return append_text
 
         return_data = self._special_event()
@@ -230,7 +282,13 @@ class GiveEvent(_Event):
         self.bread_db.cd_update_stamp(self.user_id, Action.GIVE)
         return append_text
 
-    def _pre_judge_random(self):
+    def _pre_judge_random(self, num=None):
+        if not self.is_random() and num is not None:
+            if MIN.GIVE.value <= num <= MAX.GIVE.value:
+                self.give_num = num
+                return
+            else:
+                return "数量和限制不符！"
         self.give_num = random.randint(MIN.GIVE.value, min(MAX.GIVE.value, self.user_data.bread_num))
 
 
@@ -238,6 +296,8 @@ class BetEvent(_Event):
     _instance = {}
     _has_init = {}
     _public_events = []
+    _is_random = {}
+    _is_random_global = True
 
     class G(Enum):
         ROCK = 0
@@ -256,12 +316,16 @@ class BetEvent(_Event):
     def set_user_gestures(self, ges: G):
         self.user_gestures = ges
 
-    def execute(self):
-        self.bread_db.add_user_log(self.user_id, Action.BET)
-
-        if self.user_data.bread_num < MIN.BET.value:
+    def execute(self, num=None):
+        if self.user_data.bread_num < MIN.BET.value or (num and self.user_data.bread_num < num):
             append_text = f"你的{THING}还不够猜拳w，来买一些{THING}吧！"
             return append_text
+
+        self.bread_db.add_user_log(self.user_id, Action.BET)
+
+        pre_error = self._pre_judge_random(num)
+        if pre_error:
+            return pre_error
 
         return_data = self._special_event()
         if return_data:
@@ -269,8 +333,6 @@ class BetEvent(_Event):
         return self.normal_event()
 
     def normal_event(self):
-        self._pre_judge_random()
-
         if self.outcome == self.RES.WIN:
             new_bread_num_user = self.bread_db.add_bread(self.user_id, self.bet_num)
             self.bread_db.update_no(self.user_id)
@@ -285,11 +347,18 @@ class BetEvent(_Event):
             self.bread_db.cd_update_stamp(self.user_id, Action.BET)
         return append_text
 
-    def _pre_judge_random(self):
-        self.bet_num = random.randint(MIN.BET.value, min(MAX.BET.value, self.user_data.bread_num))
+    def _pre_judge_random(self, num=None):
         self.bot_ges = self.G(random.randint(0, 2))
         self.bot_ges_text = ("石头", "布", "剪刀")[self.bot_ges.value]
         val = self.user_gestures.value - self.bot_ges.value
         if val == -2 or val == -1:
             val = 3 + val
         self.outcome = self.RES(val)
+
+        if not self.is_random() and num is not None:
+            if MIN.BET.value <= num <= MAX.BET.value:
+                self.bet_num = num
+                return
+            else:
+                return "数量和限制不符！"
+        self.bet_num = random.randint(MIN.BET.value, min(MAX.BET.value, self.user_data.bread_num))
