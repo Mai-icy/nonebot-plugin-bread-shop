@@ -132,7 +132,7 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg()):
     else:
         event_ = RobEvent(group_id)
         event_.set_user_id(user_qq)
-        event_.set_robbed_id(robbed_qq, robbed_name)
+        event_.set_other_id(robbed_qq, robbed_name)
         msg_txt = event_.execute(rob_num)
 
     res_msg = msg_at + msg_txt
@@ -174,7 +174,7 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg()):
     else:
         event_ = GiveEvent(group_id)
         event_.set_user_id(user_qq)
-        event_.set_given_id(given_qq, given_name)
+        event_.set_other_id(given_qq, given_name)
         msg_txt = event_.execute(give_num)
 
     res_msg = msg_at + msg_txt

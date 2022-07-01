@@ -39,7 +39,7 @@ def probability(value, action: Action, *, priority: int = 5, group_id_list: list
 # region 购买特殊事件
 @probability(0.01, Action.BUY, priority=5)
 def buy_event_gold_bread(event: BuyEvent):
-    buy_num = event.buy_num + 20
+    buy_num = event.action_num + 20
     new_bread_num = event.bread_db.add_bread(event.user_id, buy_num)
     new_bread_no = event.bread_db.update_no(event.user_id)
     append_text = f"出现了！黄金{THING}！计为{buy_num}个！现在一共拥有{new_bread_num}个{THING}！您的{THING}排名为:{new_bread_no}"
@@ -51,7 +51,7 @@ def buy_event_gold_bread(event: BuyEvent):
 def buy_event_poverty_relief(event: BuyEvent):
     if event.user_data.bread_num > 10:
         return
-    buy_num = event.buy_num + 10
+    buy_num = event.action_num + 10
     new_bread_num = event.bread_db.add_bread(event.user_id, buy_num)
     new_bread_no = event.bread_db.update_no(event.user_id)
     append_text = f"{THING}店看你{THING}太少了，送了你{buy_num}个！现在一共拥有{new_bread_num}个{THING}！您的{THING}排名为:{new_bread_no}"
@@ -72,7 +72,7 @@ def buy_event_too_much(event: BuyEvent):
 def buy_event_find_bad(event: BuyEvent):
     if event.user_data.bread_num < MAX.BUY.value:
         return
-    bad_num = event.buy_num
+    bad_num = event.action_num
     append_text = f"你刚要去买{THING}，发现自己{bad_num}个{THING}坏掉了！好难过，不想买啦！"
     event.bread_db.reduce_bread(event.user_id, bad_num)
     event.bread_db.cd_update_stamp(event.user_id, Action.BUY)
@@ -93,7 +93,7 @@ def eat_event_too_much_bread(event: EatEvent):
 
 @probability(0.2, Action.EAT, priority=5)
 def eat_event_not_enough(event: EatEvent):
-    eat_num = event.eat_num
+    eat_num = event.action_num
     event.bread_db.reduce_bread(event.user_id, eat_num)
     event.bread_db.add_bread(event.user_id, eat_num, Action.EAT)
     append_text = f"成功吃掉了{eat_num}个{THING}w！还是好饿，还可以继续吃！"
@@ -105,7 +105,7 @@ def eat_event_not_enough(event: EatEvent):
 def eat_event_much(event: EatEvent):
     if event.user_data.bread_num <= MAX.EAT.value:
         return
-    eat_num = event.eat_num
+    eat_num = event.action_num
     event.bread_db.reduce_bread(event.user_id, eat_num)
     event.bread_db.add_bread(event.user_id, eat_num, Action.EAT)
     append_text = f"成功吃掉了{eat_num}个{THING}w！吃太多啦，撑死了，下次吃多等30分钟！"
@@ -116,7 +116,7 @@ def eat_event_much(event: EatEvent):
 
 @probability(0.07, Action.EAT, priority=5)
 def eat_event_steal(event: EatEvent):
-    eat_num = event.eat_num
+    eat_num = event.action_num
     event.bread_db.reduce_bread(event.user_id, eat_num)
     append_text = f"你吃{THING}被我发现了！我好饿，我帮你吃吧！吃了你{eat_num}个{THING}！"
     event.bread_db.update_no(event.user_id)
@@ -125,7 +125,7 @@ def eat_event_steal(event: EatEvent):
 
 @probability(0.02, Action.EAT, priority=5)
 def eat_event_good(event: EatEvent):
-    eat_num = event.eat_num
+    eat_num = event.action_num
     event.bread_db.reduce_bread(event.user_id, eat_num)
     event.bread_db.add_bread(event.user_id, eat_num, Action.EAT)
     append_text = f"成功吃掉了{eat_num}个{THING}w！有个{THING}超好吃！让你心情舒爽！所有操作刷新！"
@@ -149,7 +149,7 @@ def eat_event_bad(event: EatEvent):
 
 @probability(0.03, Action.EAT, priority=5)
 def eat_event_rob(event: EatEvent):
-    eat_num = event.eat_num
+    eat_num = event.action_num
     event.bread_db.reduce_bread(event.user_id, eat_num)
     event.bread_db.add_bread(event.user_id, eat_num, Action.EAT)
     event.bread_db.update_no(event.user_id)
@@ -164,7 +164,7 @@ def eat_event_rob(event: EatEvent):
 def eat_event_find_bad(event: EatEvent):
     if event.user_data.bread_num < MAX.EAT.value:
         return
-    bad_num = event.eat_num
+    bad_num = event.action_num
     append_text = f"你刚想去吃{THING}，发现自己{bad_num}个{THING}坏掉了！好难过，不想吃啦！"
     event.bread_db.reduce_bread(event.user_id, bad_num)
     event.bread_db.cd_update_stamp(event.user_id, Action.EAT)
@@ -178,7 +178,7 @@ def rob_event_fail(event: RobEvent):
     loss_num = random.randint(0, min(MAX.ROB.value, event.user_data.bread_num))
     new_bread_num = event.bread_db.reduce_bread(event.user_id, loss_num)
     event.bread_db.update_no(event.user_id)
-    append_text = f"抢{THING}失败啦！被{event.robbed_name}反击，你丢失{loss_num}个{THING}！你现在拥有{new_bread_num}个{THING}！"
+    append_text = f"抢{THING}失败啦！被{event.other_name}反击，你丢失{loss_num}个{THING}！你现在拥有{new_bread_num}个{THING}！"
     event.bread_db.cd_update_stamp(event.user_id, Action.ROB)
     return append_text
 
@@ -200,7 +200,7 @@ def rob_event_addiction(event: BetEvent):
 
 @probability(0.05, Action.ROB, priority=5)
 def rob_event_police2(event: RobEvent):
-    loss_num = event.rob_num
+    loss_num = event.action_num
     append_text = f"你抢{THING}被我抓住了！你真的太坏了！我要罚你{loss_num}个{THING}！"
     event.bread_db.reduce_bread(event.user_id, loss_num)
     event.bread_db.update_no(event.user_id)
@@ -222,35 +222,35 @@ def rob_event_hungry(event: RobEvent):
 def give_event_commission(event: GiveEvent):
     if event.user_data.bread_num <= MAX.GIVE.value * 2:
         return
-    give_num = event.give_num
+    give_num = event.action_num
     user_num = event.bread_db.reduce_bread(event.user_id, give_num * 2)
-    event.bread_db.add_bread(event.given_id, give_num)
-    append_text = f"哇！这么多{THING}，你送了{give_num}个给{event.given_name}！" \
+    event.bread_db.add_bread(event.other_id, give_num)
+    append_text = f"哇！这么多{THING}，你送了{give_num}个给{event.other_name}！" \
                   f"再给我{give_num}吧嘿嘿！你现在有{user_num}个{THING}！"
     event.bread_db.update_no(event.user_id)
-    event.bread_db.update_no(event.given_id)
+    event.bread_db.update_no(event.other_id)
     event.bread_db.cd_update_stamp(event.user_id, Action.GIVE)
     return append_text
 
 
 @probability(0.1, Action.GIVE, priority=5)
 def give_event_lossless(event: GiveEvent):
-    give_num = event.give_num
-    event.bread_db.add_bread(event.given_id, give_num)
-    append_text = f"看在你如此善良的份上，我帮你送吧！送了{give_num}给{event.given_name}，你不损失{THING}！"
-    event.bread_db.update_no(event.given_id)
+    give_num = event.action_num
+    event.bread_db.add_bread(event.other_id, give_num)
+    append_text = f"看在你如此善良的份上，我帮你送吧！送了{give_num}给{event.other_name}，你不损失{THING}！"
+    event.bread_db.update_no(event.other_id)
     event.bread_db.cd_update_stamp(event.user_id, Action.GIVE)
     return append_text
 
 
 @probability(0.06, Action.GIVE, priority=5)
 def give_event_lossless2(event: GiveEvent):
-    give_num = event.give_num
+    give_num = event.action_num
     give_num2 = random.randint(MIN.GIVE.value, min(MAX.GIVE.value, event.user_data.bread_num))
-    event.bread_db.add_bread(event.given_id, give_num)
+    event.bread_db.add_bread(event.other_id, give_num)
     event.bread_db.add_bread(event.user_id, give_num2)
-    append_text = f"大好人！我帮你送吧！送了{give_num}给{event.given_name}，我再送你{give_num2}个！"
-    event.bread_db.update_no(event.given_id)
+    append_text = f"大好人！我帮你送吧！送了{give_num}给{event.other_name}，我再送你{give_num2}个！"
+    event.bread_db.update_no(event.other_id)
     event.bread_db.cd_update_stamp(event.user_id, Action.GIVE)
     return append_text
 # endregion
@@ -274,7 +274,7 @@ def bet_event_police(event: BetEvent):
 
 @probability(0.04, Action.BET, priority=5)
 def bet_event_cheat(event: BetEvent):
-    loss_num = event.bet_num
+    loss_num = event.action_num
     append_text = f"我出三只手！石头剪刀布！你输啦！给我{loss_num}个{THING}！"
     event.bread_db.reduce_bread(event.user_id, loss_num)
     event.bread_db.update_no(event.user_id)
