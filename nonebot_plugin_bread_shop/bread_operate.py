@@ -103,12 +103,12 @@ class _Event:
         min_num = getattr(MIN, self._event_type.name).value
 
         if not self.is_random() and num is not None:
-            if MIN.BUY.value <= num <= MAX.BUY.value:
+            if min_num <= num <= max_num:
                 self.action_num = num
                 return
             else:
                 return "数量和限制不符！"
-        self.action_num = random.randint(min_num, min(max_num, self.user_data.bread_num))
+        # self.action_num = random.randint(min_num, min(max_num, self.user_data.bread_num))
 
 
 class _Event2(_Event):
@@ -141,6 +141,10 @@ class BuyEvent(_Event):
         self.bread_db.cd_update_stamp(self.user_id, Action.BUY)
         return append_text
 
+    def _pre_event(self, num=None):
+        self.action_num = random.randint(MIN.BUY.value, MAX.BUY.value)
+        return super(BuyEvent, self)._pre_event(num)
+
 
 class EatEvent(_Event):
     _event_type = Action.EAT
@@ -162,6 +166,8 @@ class EatEvent(_Event):
         if self.user_data.bread_num < MIN.EAT.value or (num and self.user_data.bread_num < num):
             append_text = f"你的{THING}还不够吃w，来买一些{THING}吧！"
             return append_text
+
+        self.action_num = random.randint(MIN.EAT.value, min(MAX.EAT.value, self.user_data.bread_num))
         return super(EatEvent, self)._pre_event(num)
 
 
@@ -217,6 +223,7 @@ class BetEvent(_Event):
             val = 3 + val
         self.outcome = self.RES(val)
 
+        self.action_num = random.randint(MIN.BET.value, min(MAX.BET.value, self.user_data.bread_num))
         return super(BetEvent, self)._pre_event(num)
 
 
@@ -245,13 +252,15 @@ class RobEvent(_Event2):
             append_text = f"{self.other_name}没有那么多{THING}可抢呜"
             return append_text
 
+        self.action_num = random.randint(MIN.ROB.value, min(MAX.ROB.value, self.other_data.bread_num))
         pre_res = super(RobEvent, self)._pre_event(num)
         if pre_res:
             return pre_res
 
         if self.user_id == self.other_id:
-            append_text = f"这么想抢自己哇，那我帮你抢！抢了你{self.action_num}个{THING}嘿嘿！"
-            self.bread_db.reduce_bread(self.user_id, self.action_num)
+            reduce_num = min(self.action_num, self.user_data.bread_num)
+            append_text = f"这么想抢自己哇，那我帮你抢！抢了你{reduce_num}个{THING}嘿嘿！"
+            self.bread_db.reduce_bread(self.user_id, reduce_num)
             self.bread_db.update_no(self.other_id)
             self.bread_db.cd_update_stamp(self.user_id, Action.ROB)
             return append_text
@@ -281,6 +290,7 @@ class GiveEvent(_Event2):
             append_text = f"你的{THING}还不够赠送w，来买一些{THING}吧！"
             return append_text
 
+        self.action_num = random.randint(MIN.GIVE.value, min(MAX.GIVE.value, self.user_data.bread_num))
         pre_res = super(GiveEvent, self)._pre_event(num)
         if pre_res:
             return pre_res

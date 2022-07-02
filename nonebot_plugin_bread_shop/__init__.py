@@ -3,6 +3,7 @@
 
 import re
 
+from nonebot import get_driver
 from nonebot import on_command
 from nonebot.params import CommandArg
 from nonebot.adapters.onebot.v11 import Bot, Event, Message
@@ -12,6 +13,8 @@ from .bread_operate import *
 from .bread_event import rob_events, buy_events, eat_events, give_events, bet_events
 from .config import BANNED_GROUPS, THING, LEVEL_NUM, random_config
 
+
+driver=get_driver()
 
 bread_buy = on_command("bread_buy", aliases={f"买{THING}", "buy", "🍞"}, priority=5)
 bread_eat = on_command("bread_eat", aliases={f"吃{THING}", f"啃{THING}", "eat", "🍞🍞"}, priority=5)
@@ -371,7 +374,6 @@ async def get_nickname(bot: Bot, user_id, group_id=None):
 def get_num_arg(text, event_type, group_id):
     text = text.strip()
     if text:
-        print(text)
         if event_type(group_id).is_random():
             raise ArgsError("本群不可指定其它参数！请正确使用'@'")
         elif not text.isdigit():
@@ -383,4 +385,10 @@ def get_num_arg(text, event_type, group_id):
 
 
 class ArgsError(ValueError):
+    pass
+
+
+@driver.on_shutdown
+async def do_something():
+    # todo 关闭数据库防止内存泄漏
     pass
