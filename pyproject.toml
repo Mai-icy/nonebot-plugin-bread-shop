@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot-plugin-bread-shop"
-version = "0.1.5"
+version = "0.1.6"
 description = "nobebot2面包店插件"
 authors = ["Mai Icy <maiicy@Foxmail.com>"]
 license = "MIT"
