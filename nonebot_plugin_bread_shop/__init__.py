@@ -369,8 +369,8 @@ async def get_nickname(bot: Bot, user_id, group_id=None):
 
 
 def get_num_arg(text, event_type, group_id):
+    text = text.strip()
     if text:
-        text = text.strip()
         print(text)
         if event_type(group_id).is_random():
             raise ArgsError("本群不可指定其它参数！请正确使用'@'")
