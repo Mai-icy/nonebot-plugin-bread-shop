@@ -390,5 +390,4 @@ class ArgsError(ValueError):
 
 @driver.on_shutdown
 async def do_something():
-    # todo 关闭数据库防止内存泄漏
-    pass
+    BreadDataManage.close_dbs()

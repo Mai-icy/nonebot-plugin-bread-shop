@@ -79,7 +79,7 @@ class BreadDataManage:
                 self.conn = sqlite3.connect(self.database_path)
             print("数据库连接！")
 
-    def __del__(self):
+    def close(self):
         self.conn.close()
         print("数据库关闭！")
 
@@ -116,6 +116,11 @@ class BreadDataManage:
         cur.execute('select * from BREAD_DATA')
         result = cur.fetchall()
         return len(result) + 1
+
+    @classmethod
+    def close_dbs(cls):
+        for group_id in cls._instance.keys():
+            BreadDataManage(group_id).close()
 
     @type_assert(object, "user_id")
     def _create_user(self, user_id: str) -> None:
