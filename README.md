@@ -90,6 +90,8 @@ pip install nonebot-plugin-bread-shop
 
 在**bread_event.py**中可以编写特殊事件！
 
+**可以在[issue](https://github.com/Mai-icy/nonebot-plugin-bread-shop/issues/5)中提供你的点子！**
+
 特殊事件模板：
 
 group_id_list默认为全部群聊
