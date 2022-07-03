@@ -1,47 +1,103 @@
 #!/usr/bin/python
 # -*- coding:utf-8 -*-
 from enum import Enum
+from nonebot import get_driver
+from pydantic import BaseSettings, Extra
 
-# 自定义物品，改掉默认的”面包“
-THING = "面包"
 
-# 被禁止的群聊
-BANNED_GROUPS = []
+class Config(BaseSettings, extra=Extra.ignore):
+    bread_thing: str = "面包"  # 自定义物品，改掉默认的”面包“
+    global_bread: bool = True  # 面包默认开关
+    black_bread_groups: list = []  # 黑名单
+    white_bread_groups: list = []  # 白名单
+    level_bread_num: int = 10  # 设置升一级所需要的面包数量（数据库不保存等级！！等级会随之而变！）
 
-# 设置升一级所需要的面包数量（数据库不保存等级！！等级会随之而变！）
-LEVEL_NUM = 10
+    """操作冷却（单位：秒）"""
+    cd_buy: int = 4200
+    cd_eat: int = 4800
+    cd_rob: int = 7000
+    cd_give: int = 3000
+    cd_bet: int = 5400
+
+    """操作随机值上限"""
+    max_buy: int = 10
+    max_eat: int = 7
+    max_rob: int = 7
+    max_give: int = 10
+    max_bet: int = 10
+
+    """操作随机值下限"""
+    min_buy: int = 1
+    min_eat: int = 1
+    min_rob: int = 1
+    min_give: int = 1
+    min_bet: int = 5
+
+    """设置是否操作值都由随机值决定"""
+    is_random_buy: bool = True
+    is_random_eat: bool = True
+    is_random_rob: bool = True
+    is_random_give: bool = True
+    is_random_bet: bool = True
+
+    special_buy_group: dict = {}  # 示例： {"群号": bool}
+    special_eat_group: dict = {}
+    special_rob_group: dict = {}
+    special_give_group: dict = {}
+    special_bet_group: dict = {}
+
+
+global_config = get_driver().config
+bread_config = Config(**global_config.dict())  # 载入配置
+
+
+THING = bread_config.bread_thing
+
+
+LEVEL = bread_config.level_bread_num
 
 
 class CD(Enum):
     """操作冷却（单位：秒）"""
-    BUY = 4200
-    EAT = 4800
-    ROB = 7000
-    GIVE = 3000
-    BET = 5400
+    BUY = bread_config.cd_buy
+    EAT = bread_config.cd_eat
+    ROB = bread_config.cd_rob
+    GIVE = bread_config.cd_give
+    BET = bread_config.cd_bet
 
 
 class MAX(Enum):
     """操作随机值上限"""
-    BUY = 10
-    EAT = 7
-    ROB = 7
-    GIVE = 10
-    BET = 10
+    BUY = bread_config.max_buy
+    EAT = bread_config.max_eat
+    ROB = bread_config.max_rob
+    GIVE = bread_config.max_give
+    BET = bread_config.max_bet
 
 
 class MIN(Enum):
     """操作随机值下限"""
-    BUY = 1
-    EAT = 1
-    ROB = 1
-    GIVE = 1
-    BET = 5
+    BUY = bread_config.min_buy
+    EAT = bread_config.min_eat
+    ROB = bread_config.min_rob
+    GIVE = bread_config.min_give
+    BET = bread_config.min_bet
 
 
 def random_config():
     """设置操作数量是否由用户指定或随机"""
     from .bread_operate import BuyEvent, EatEvent, RobEvent, GiveEvent, BetEvent
-    # GiveEvent("群号").set_random(False)  # 取消随机（变为用户指定，用户若没有指定则为随机）
-    # GiveEvent.set_random_global(False)  # 默认全为True
-    # BetEvent.set_random_global(False)  # 其它事件均可设置
+    events = [BuyEvent, EatEvent, RobEvent, GiveEvent, BetEvent]
+    global_settings = [bread_config.is_random_buy, bread_config.is_random_eat, bread_config.is_random_rob,
+                       bread_config.is_random_give, bread_config.is_random_bet]
+    special_settings = [bread_config.special_buy_group, bread_config.special_eat_group, bread_config.special_rob_group,
+                        bread_config.special_give_group, bread_config.special_bet_group]
+
+    for event_, setting in zip(events, global_settings):
+        if not setting:
+            event_.set_random_global(False)
+
+    for event_, setting in zip(events, special_settings):
+        if setting:
+            for group_id in setting.keys():
+                event_(group_id).set_random(setting[group_id])

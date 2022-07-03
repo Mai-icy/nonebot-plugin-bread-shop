@@ -3,7 +3,7 @@
 import time
 import random
 from .bread_handle import BreadDataManage, Action, BreadData
-from .config import MAX, MIN, CD, THING, LEVEL_NUM
+from .config import MAX, MIN, CD, THING, LEVEL
 from enum import Enum
 
 
@@ -157,7 +157,7 @@ class EatEvent(_Event):
     def normal_event(self):
         now_bread = self.bread_db.reduce_bread(self.user_id, self.action_num)
         eaten_bread = self.bread_db.add_bread(self.user_id, self.action_num, Action.EAT)
-        append_text = f"成功吃掉了{self.action_num}个{THING}w！现在你还剩{now_bread}个{THING}w！您目前的等级为Lv.{eaten_bread // LEVEL_NUM}"
+        append_text = f"成功吃掉了{self.action_num}个{THING}w！现在你还剩{now_bread}个{THING}w！您目前的等级为Lv.{eaten_bread // LEVEL}"
         self.bread_db.cd_update_stamp(self.user_id, Action.EAT)
         self.bread_db.update_no(self.user_id)
         return append_text

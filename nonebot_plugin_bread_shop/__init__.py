@@ -11,7 +11,7 @@ from nonebot.adapters.onebot.v11 import Bot, Event, Message
 from .bread_handle import BreadDataManage, Action
 from .bread_operate import *
 from .bread_event import rob_events, buy_events, eat_events, give_events, bet_events
-from .config import BANNED_GROUPS, THING, LEVEL_NUM, random_config
+from .config import THING, LEVEL, random_config, bread_config
 
 
 driver=get_driver()
@@ -44,7 +44,7 @@ async def _(event: Event, bot: Bot, args: Message = CommandArg()):
     msg_at = Message(f"[CQ:at,qq={user_qq}]")
 
     group_id = await get_group_id(event.get_session_id())
-    if group_id in BANNED_GROUPS:
+    if is_group_ban(group_id):
         await bot.send(event=event, message=f"本群已禁止{THING}店！请联系bot管理员！")
         return
 
@@ -75,7 +75,7 @@ async def _(event: Event, bot: Bot, args: Message = CommandArg()):
     msg_at = Message(f"[CQ:at,qq={user_qq}]")
 
     group_id = await get_group_id(event.get_session_id())
-    if group_id in BANNED_GROUPS:
+    if is_group_ban(group_id):
         await bot.send(event=event, message=f"本群已禁止{THING}店！请联系bot管理员！")
         return
 
@@ -88,7 +88,7 @@ async def _(event: Event, bot: Bot, args: Message = CommandArg()):
     wait_time = cd_wait_time(group_id, user_qq, Action.EAT)
     if wait_time > 0:
         data = BreadDataManage(group_id).get_bread_data(user_qq)
-        msg_txt = f"您还得等待{wait_time // 60}分钟才能吃{THING}w，现在你的等级是Lv.{data.bread_eaten // LEVEL_NUM}！您的{THING}排名为:{data.no}"
+        msg_txt = f"您还得等待{wait_time // 60}分钟才能吃{THING}w，现在你的等级是Lv.{data.bread_eaten // LEVEL}！您的{THING}排名为:{data.no}"
     elif wait_time < 0:
         msg_txt = f"你被禁止吃{THING}啦！{(abs(wait_time)+ CD.EAT.value) // 60}分钟后才能吃哦！"
     else:
@@ -105,8 +105,10 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg()):
     user_qq = event.get_user_id()
     msg_at = Message(f"[CQ:at,qq={user_qq}]")
 
+    print(args.extract_plain_text())
+
     group_id = await get_group_id(event.get_session_id())
-    if group_id in BANNED_GROUPS:
+    if is_group_ban(group_id):
         await bot.send(event=event, message=f"本群已禁止{THING}店！请联系bot管理员！")
         return
 
@@ -148,7 +150,7 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg()):
     msg_at = Message(f"[CQ:at,qq={user_qq}]")
 
     group_id = await get_group_id(event.get_session_id())
-    if group_id in BANNED_GROUPS:
+    if is_group_ban(group_id):
         await bot.send(event=event, message=f"本群已禁止{THING}店！请联系bot管理员！")
         return
 
@@ -189,7 +191,7 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg()):
     user_qq = event.get_user_id()
     msg_at = Message(f"[CQ:at,qq={user_qq}]")
     group_id = await get_group_id(event.get_session_id())
-    if group_id in BANNED_GROUPS:
+    if is_group_ban(group_id):
         await bot.send(event=event, message=f"本群已禁止{THING}店！请联系bot管理员！")
         return
 
@@ -239,7 +241,7 @@ async def _(event: Event, bot: Bot, args: Message = CommandArg()):
     msg_at = Message(f"[CQ:at,qq={user_qq}]")
 
     group_id = await get_group_id(event.get_session_id())
-    if group_id in BANNED_GROUPS:
+    if is_group_ban(group_id):
         await bot.send(event=event, message=f"本群已禁止{THING}店！请联系bot管理员！")
         return
 
@@ -264,7 +266,7 @@ async def _(event: Event, bot: Bot, args: Message = CommandArg()):
     msg_at = Message(f"[CQ:at,qq={user_qq}]")
 
     group_id = await get_group_id(event.get_session_id())
-    if group_id in BANNED_GROUPS:
+    if is_group_ban(group_id):
         await bot.send(event=event, message=f"本群已禁止{THING}店！请联系bot管理员！")
         return
 
@@ -305,7 +307,7 @@ async def _(event: Event, bot: Bot, args: Message = CommandArg()):
 @bread_help.handle()
 async def _(event: Event, bot: Bot):
     group_id = await get_group_id(event.get_session_id())
-    if group_id in BANNED_GROUPS:
+    if is_group_ban(group_id):
         await bot.send(event=event, message=f"本群已禁止{THING}店！请联系bot管理员！")
         return
 
@@ -328,7 +330,7 @@ https://github.com/Mai-icy/nonebot-plugin-bread-shop"""
 @bread_top.handle()
 async def _(bot: Bot, event: Event):
     group_id = await get_group_id(event.get_session_id())
-    if group_id in BANNED_GROUPS:
+    if is_group_ban(group_id):
         await bot.send(event=event, message=f"本群已禁止{THING}店！请联系bot管理员！")
         return
     msg = await get_group_top(bot, group_id)
@@ -351,7 +353,7 @@ async def get_group_top(bot: Bot, group_id) -> Message:
         if int(data.user_id) in user_id_list:
             num += 1
             name = await get_nickname(bot, data.user_id, group_id)
-            append_text += f"top{num} : {name} Lv.{data.bread_eaten // LEVEL_NUM}，拥有{THING}{data.bread_num}个\n"
+            append_text += f"top{num} : {name} Lv.{data.bread_eaten // LEVEL}，拥有{THING}{data.bread_num}个\n"
         if num == 5:
             break
     append_text += "大家继续加油w！"
@@ -384,10 +386,23 @@ def get_num_arg(text, event_type, group_id):
         return None
 
 
+def is_group_ban(group_id) -> bool:
+    if bread_config.global_bread:
+        if group_id in bread_config.black_bread_groups:
+            return True
+        else:
+            return False
+    else:
+        if group_id in bread_config.white_bread_groups:
+            return False
+        else:
+            return True
+
+
 class ArgsError(ValueError):
     pass
 
 
 @driver.on_shutdown
-async def do_something():
+async def close_db():
     BreadDataManage.close_dbs()

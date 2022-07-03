@@ -56,36 +56,35 @@ pip install nonebot-plugin-bread-shop
 
 ## ⚙️自定义配置
 
-在**config.py**的枚举类中可以设置所有随机操作的最大值和最小值以及操作冷却。
+**配置方式**：请在 `NoneBot` 全局配置文件中添加以下配置项即可。
 
 **参数说明**：
 
-**THING**：可修改默认的“面包”改为其他物品例如： “炸鸡”，“蛋糕”等等
+**bread_thing**：可修改默认的“面包”改为其他物品例如： “炸鸡”，“蛋糕”等等
 
-**LEVEL_NUM**：修改升级一级所需要吃的面包数量，默认为10
+**global_bread**：面包全局开关
+
+**black_bread_groups**：黑名单
+
+**white_bread_groups**：白名单
+
+**level_bread_num**：修改升级一级所需要吃的面包数量，默认为10
 
 (注意：等级不被数据库记录数据库只记录已经吃了的数量，修改该值会使用户等级变化，变化可逆)
 
-**BANNED_GROUPS**：设置黑名单群聊
+**cd_buy,cd_eat,cd_rob,cd_give,cd_bet**：操作冷却（单位：秒）
 
-**CD**：操作冷却（单位：秒）
+**max_buy,max_eat,max_rob,max_give,max_bet**：操作随机值上限
 
-**MAX**：操作随机值上限
+**min_buy,min_eat,min_rob,min_give,min_bet**：操作随机值下限
 
-**MIN**：操作随机值下限
-
-**random_config**：如下
-
-```python
-def random_config():
-    """设置操作数量是否由用户指定或随机"""
-    from .bread_operate import BuyEvent, EatEvent, RobEvent, GiveEvent, BetEvent
-    # GiveEvent("群号").set_random(False)  # 取消随机（变为用户指定，用户若没有指定则为随机）
-    # GiveEvent.set_random_global(False)  # 默认全为True
-    # BetEvent.set_random_global(False)  # 其它事件均可设置
-```
+**is_random_give,is_random_eat等**：设置是否操作值都由随机值决定(全局)
 
 (注意：改为False之后用户可以通过 "操作名 + @ + 数量" 或 "操作名 + 数量" 达到效果)
+
+**special\_操作名_group**：设置特别处理的群 （示例： {"群号": bool}）
+
+详情请见config.py文件
 
 ## 🍞自定义事件
 

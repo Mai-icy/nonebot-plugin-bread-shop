@@ -5,7 +5,7 @@ from functools import wraps
 
 from .bread_handle import Action
 from .bread_operate import RobEvent, EatEvent, BuyEvent, GiveEvent, BetEvent
-from .config import MIN, MAX, THING, LEVEL_NUM
+from .config import MIN, MAX, THING, LEVEL
 
 rob_events = []
 eat_events = []
@@ -142,7 +142,7 @@ def eat_event_bad(event: EatEvent):
         return
     append_text = f"{THING}坏啦！吃了一个坏{THING}！难受死了，等级减1。"
     event.bread_db.reduce_bread(event.user_id, 1)
-    event.bread_db.reduce_bread(event.user_id, LEVEL_NUM, Action.EAT)
+    event.bread_db.reduce_bread(event.user_id, LEVEL, Action.EAT)
     event.bread_db.update_no(event.user_id)
     return append_text
 
