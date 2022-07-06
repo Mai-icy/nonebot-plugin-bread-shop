@@ -80,9 +80,11 @@ random_config()
 @bread_buy.handle()
 async def _(event: Event, bot: Bot, args: Message = CommandArg(), cmd: Message = RawCommand()):
     user_qq = event.get_user_id()
-    msg_at = Message(f"[CQ:at,qq={user_qq}]")
-
     group_id = await get_group_id(event.get_session_id())
+    name = await get_nickname(bot, user_qq, group_id)
+
+    # msg_at = Message(f"[CQ:at,qq={user_qq}]")
+    msg_at = Message("@" + name)
 
     try:
         thing = get_group_thing(group_id, cmd, cmd_buy_ori)
@@ -118,7 +120,6 @@ async def _(event: Event, bot: Bot, args: Message = CommandArg(), cmd: Message =
 async def _(event: Event, bot: Bot, args: Message = CommandArg(), cmd: Message = RawCommand()):
     user_qq = event.get_user_id()
     msg_at = Message(f"[CQ:at,qq={user_qq}]")
-
     group_id = await get_group_id(event.get_session_id())
 
     try:
@@ -154,9 +155,11 @@ async def _(event: Event, bot: Bot, args: Message = CommandArg(), cmd: Message =
 @bread_rob.handle()
 async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message = RawCommand()):
     user_qq = event.get_user_id()
-    msg_at = Message(f"[CQ:at,qq={user_qq}]")
-
     group_id = await get_group_id(event.get_session_id())
+    name = await get_nickname(bot, user_qq, group_id)
+
+    # msg_at = Message(f"[CQ:at,qq={user_qq}]")
+    msg_at = Message("@" + name)
 
     try:
         thing = get_group_thing(group_id, cmd, cmd_rob_ori)
@@ -202,9 +205,11 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message =
 @bread_give.handle()
 async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message = RawCommand()):
     user_qq = event.get_user_id()
-    msg_at = Message(f"[CQ:at,qq={user_qq}]")
-
     group_id = await get_group_id(event.get_session_id())
+    name = await get_nickname(bot, user_qq, group_id)
+
+    # msg_at = Message(f"[CQ:at,qq={user_qq}]")
+    msg_at = Message("@" + name)
 
     try:
         thing = get_group_thing(group_id, cmd, cmd_give_ori)
@@ -250,8 +255,11 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message =
 @bread_bet.handle()
 async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message = RawCommand()):
     user_qq = event.get_user_id()
-    msg_at = Message(f"[CQ:at,qq={user_qq}]")
     group_id = await get_group_id(event.get_session_id())
+    name = await get_nickname(bot, user_qq, group_id)
+
+    # msg_at = Message(f"[CQ:at,qq={user_qq}]")
+    msg_at = Message("@" + name)
 
     try:
         thing = get_group_thing(group_id, cmd, cmd_bet_ori)
@@ -305,9 +313,11 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message =
 @bread_check.handle()
 async def _(event: Event, bot: Bot, args: Message = CommandArg(), cmd: Message = RawCommand()):
     user_qq = event.get_user_id()
-    msg_at = Message(f"[CQ:at,qq={user_qq}]")
-
     group_id = await get_group_id(event.get_session_id())
+    name = await get_nickname(bot, user_qq, group_id)
+
+    # msg_at = Message(f"[CQ:at,qq={user_qq}]")
+    msg_at = Message("@" + name)
 
     try:
         thing = get_group_thing(group_id, cmd, cmd_check_ori)
@@ -336,9 +346,11 @@ async def _(event: Event, bot: Bot, args: Message = CommandArg(), cmd: Message =
 @bread_log.handle()
 async def _(event: Event, bot: Bot, args: Message = CommandArg(), cmd: Message = RawCommand()):
     user_qq = event.get_user_id()
-    msg_at = Message(f"[CQ:at,qq={user_qq}]")
+    group_id = await get_group_id(event.get_session_id())
+    name = await get_nickname(bot, user_qq, group_id)
 
-    group_id = await get_group_id(event.get_session_id())\
+    # msg_at = Message(f"[CQ:at,qq={user_qq}]")
+    msg_at = Message("@" + name)
 
     try:
         thing = get_group_thing(group_id, cmd, cmd_log_ori)
