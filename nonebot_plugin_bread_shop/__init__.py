@@ -119,8 +119,11 @@ async def _(event: Event, bot: Bot, args: Message = CommandArg(), cmd: Message =
 @bread_eat.handle()
 async def _(event: Event, bot: Bot, args: Message = CommandArg(), cmd: Message = RawCommand()):
     user_qq = event.get_user_id()
-    msg_at = Message(f"[CQ:at,qq={user_qq}]")
     group_id = await get_group_id(event.get_session_id())
+    name = await get_nickname(bot, user_qq, group_id)
+
+    # msg_at = Message(f"[CQ:at,qq={user_qq}]")
+    msg_at = Message("@" + name)
 
     try:
         thing = get_group_thing(group_id, cmd, cmd_eat_ori)
