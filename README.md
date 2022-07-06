@@ -60,7 +60,9 @@ pip install nonebot-plugin-bread-shop
 
 **参数说明**：
 
-**bread_thing**：可修改默认的“面包”改为其他物品例如： “炸鸡”，“蛋糕”等等
+**bread_thing**：可修改默认的“面包”改为其他物品例如： “炸鸡”，“蛋糕”等等（全局）
+
+**special_thing_group** ：分群设置物品例如：{"群号": "炸鸡"}
 
 **global_bread**：面包全局开关
 

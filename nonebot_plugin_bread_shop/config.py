@@ -6,7 +6,9 @@ from pydantic import BaseSettings, Extra
 
 
 class Config(BaseSettings, extra=Extra.ignore):
-    bread_thing: str = "面包"  # 自定义物品，改掉默认的”面包“
+    bread_thing: str = "面包"  # 自定义物品，改掉默认的”面包“ 此为全局
+    special_thing_group = {}  # 分群设置物品 示例{"群号": "炸鸡"}
+
     global_bread: bool = True  # 面包默认开关
     black_bread_groups: list = []  # 黑名单
     white_bread_groups: list = []  # 白名单
@@ -49,9 +51,6 @@ class Config(BaseSettings, extra=Extra.ignore):
 
 global_config = get_driver().config
 bread_config = Config(**global_config.dict())  # 载入配置
-
-
-THING = bread_config.bread_thing
 
 
 LEVEL = bread_config.level_bread_num
