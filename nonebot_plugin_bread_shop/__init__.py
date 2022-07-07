@@ -79,26 +79,13 @@ random_config()
 
 @bread_buy.handle()
 async def _(event: Event, bot: Bot, args: Message = CommandArg(), cmd: Message = RawCommand()):
-    user_qq = event.get_user_id()
-    group_id = await get_group_id(event.get_session_id())
-    name = await get_nickname(bot, user_qq, group_id)
-
-    # msg_at = Message(f"[CQ:at,qq={user_qq}]")
-    msg_at = Message("@" + name)
-
     try:
-        thing = get_group_thing(group_id, cmd, cmd_buy_ori)
-    except CommandError:
-        return
-
-    if is_group_ban(group_id):
-        await bot.send(event=event, message=f"本群已禁止{thing}店！请联系bot管理员！")
-        return
-
-    try:
+        user_qq, group_id, name, msg_at, thing = await pre_get_data(event, bot, cmd, cmd_buy_ori)
         buy_num = get_num_arg(args.extract_plain_text(), BuyEvent, group_id)
     except ArgsError as e:
         await bot.send(event=event, message=str(e))
+        return
+    except CommandError:
         return
 
     wait_time = cd_wait_time(group_id, user_qq, Action.BUY)
@@ -118,26 +105,13 @@ async def _(event: Event, bot: Bot, args: Message = CommandArg(), cmd: Message =
 
 @bread_eat.handle()
 async def _(event: Event, bot: Bot, args: Message = CommandArg(), cmd: Message = RawCommand()):
-    user_qq = event.get_user_id()
-    group_id = await get_group_id(event.get_session_id())
-    name = await get_nickname(bot, user_qq, group_id)
-
-    # msg_at = Message(f"[CQ:at,qq={user_qq}]")
-    msg_at = Message("@" + name)
-
     try:
-        thing = get_group_thing(group_id, cmd, cmd_eat_ori)
-    except CommandError:
-        return
-
-    if is_group_ban(group_id):
-        await bot.send(event=event, message=f"本群已禁止{thing}店！请联系bot管理员！")
-        return
-
-    try:
+        user_qq, group_id, name, msg_at, thing = await pre_get_data(event, bot, cmd, cmd_eat_ori)
         eat_num = get_num_arg(args.extract_plain_text(), EatEvent, group_id)
     except ArgsError as e:
         await bot.send(event=event, message=str(e))
+        return
+    except CommandError:
         return
 
     wait_time = cd_wait_time(group_id, user_qq, Action.EAT)
@@ -157,20 +131,10 @@ async def _(event: Event, bot: Bot, args: Message = CommandArg(), cmd: Message =
 
 @bread_rob.handle()
 async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message = RawCommand()):
-    user_qq = event.get_user_id()
-    group_id = await get_group_id(event.get_session_id())
-    name = await get_nickname(bot, user_qq, group_id)
-
-    # msg_at = Message(f"[CQ:at,qq={user_qq}]")
-    msg_at = Message("@" + name)
-
     try:
-        thing = get_group_thing(group_id, cmd, cmd_rob_ori)
+        user_qq, group_id, name, msg_at, thing = await pre_get_data(event, bot, cmd, cmd_rob_ori)
     except CommandError:
-        return
-
-    if is_group_ban(group_id):
-        await bot.send(event=event, message=f"本群已禁止{thing}店！请联系bot管理员！")
+        print("?")
         return
 
     robbed_qq = None
@@ -207,20 +171,9 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message =
 
 @bread_give.handle()
 async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message = RawCommand()):
-    user_qq = event.get_user_id()
-    group_id = await get_group_id(event.get_session_id())
-    name = await get_nickname(bot, user_qq, group_id)
-
-    # msg_at = Message(f"[CQ:at,qq={user_qq}]")
-    msg_at = Message("@" + name)
-
     try:
-        thing = get_group_thing(group_id, cmd, cmd_give_ori)
+        user_qq, group_id, name, msg_at, thing = await pre_get_data(event, bot, cmd, cmd_give_ori)
     except CommandError:
-        return
-
-    if is_group_ban(group_id):
-        await bot.send(event=event, message=f"本群已禁止{thing}店！请联系bot管理员！")
         return
 
     given_qq = None
@@ -257,20 +210,9 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message =
 
 @bread_bet.handle()
 async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message = RawCommand()):
-    user_qq = event.get_user_id()
-    group_id = await get_group_id(event.get_session_id())
-    name = await get_nickname(bot, user_qq, group_id)
-
-    # msg_at = Message(f"[CQ:at,qq={user_qq}]")
-    msg_at = Message("@" + name)
-
     try:
-        thing = get_group_thing(group_id, cmd, cmd_bet_ori)
+        user_qq, group_id, name, msg_at, thing = await pre_get_data(event, bot, cmd, cmd_bet_ori)
     except CommandError:
-        return
-
-    if is_group_ban(group_id):
-        await bot.send(event=event, message=f"本群已禁止{thing}店！请联系bot管理员！")
         return
 
     wait_time = cd_wait_time(group_id, user_qq, Action.BET)
@@ -315,20 +257,9 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message =
 
 @bread_check.handle()
 async def _(event: Event, bot: Bot, args: Message = CommandArg(), cmd: Message = RawCommand()):
-    user_qq = event.get_user_id()
-    group_id = await get_group_id(event.get_session_id())
-    name = await get_nickname(bot, user_qq, group_id)
-
-    # msg_at = Message(f"[CQ:at,qq={user_qq}]")
-    msg_at = Message("@" + name)
-
     try:
-        thing = get_group_thing(group_id, cmd, cmd_check_ori)
+        user_qq, group_id, name, msg_at, thing = await pre_get_data(event, bot, cmd, cmd_check_ori)
     except CommandError:
-        return
-
-    if is_group_ban(group_id):
-        await bot.send(event=event, message=f"本群已禁止{thing}店！请联系bot管理员！")
         return
 
     checked_qq = user_qq
@@ -348,20 +279,9 @@ async def _(event: Event, bot: Bot, args: Message = CommandArg(), cmd: Message =
 
 @bread_log.handle()
 async def _(event: Event, bot: Bot, args: Message = CommandArg(), cmd: Message = RawCommand()):
-    user_qq = event.get_user_id()
-    group_id = await get_group_id(event.get_session_id())
-    name = await get_nickname(bot, user_qq, group_id)
-
-    # msg_at = Message(f"[CQ:at,qq={user_qq}]")
-    msg_at = Message("@" + name)
-
     try:
-        thing = get_group_thing(group_id, cmd, cmd_log_ori)
+        user_qq, group_id, name, msg_at, thing = await pre_get_data(event, bot, cmd, cmd_log_ori)
     except CommandError:
-        return
-
-    if is_group_ban(group_id):
-        await bot.send(event=event, message=f"本群已禁止{thing}店！请联系bot管理员！")
         return
 
     add_arg = args.extract_plain_text()
@@ -400,15 +320,9 @@ async def _(event: Event, bot: Bot, args: Message = CommandArg(), cmd: Message =
 
 @bread_help.handle()
 async def _(event: Event, bot: Bot, cmd: Message = RawCommand()):
-    group_id = await get_group_id(event.get_session_id())
-
     try:
-        thing = get_group_thing(group_id, cmd, cmd_help_ori)
+        user_qq, group_id, name, msg_at, thing = await pre_get_data(event, bot, cmd, cmd_help_ori)
     except CommandError:
-        return
-
-    if is_group_ban(group_id):
-        await bot.send(event=event, message=f"本群已禁止{thing}店！请联系bot管理员！")
         return
 
     msg = f"""       🍞商店使用说明🍞
@@ -429,16 +343,11 @@ https://github.com/Mai-icy/nonebot-plugin-bread-shop"""
 
 @bread_top.handle()
 async def _(bot: Bot, event: Event, cmd: Message = RawCommand()):
-    group_id = await get_group_id(event.get_session_id())
-
     try:
-        thing = get_group_thing(group_id, cmd, cmd_top_ori)
+        user_qq, group_id, name, msg_at, thing = await pre_get_data(event, bot, cmd, cmd_top_ori)
     except CommandError:
         return
 
-    if is_group_ban(group_id):
-        await bot.send(event=event, message=f"本群已禁止{thing}店！请联系bot管理员！")
-        return
     msg = await get_group_top(bot, group_id, thing)
     await bot.send(event=event, message=msg)
 
@@ -492,27 +401,24 @@ def get_num_arg(text, event_type, group_id):
         return None
 
 
-def is_group_ban(group_id) -> bool:
-    if bread_config.global_bread:
-        if group_id in bread_config.black_bread_groups:
-            return True
-        else:
-            return False
-    else:
-        if group_id in bread_config.white_bread_groups:
-            return False
-        else:
-            return True
+async def pre_get_data(event, bot, cmd, cmd_ori):
+    user_qq = event.get_user_id()
+    group_id = await get_group_id(event.get_session_id())
+    name = await get_nickname(bot, user_qq, group_id)
 
+    # msg_at = Message(f"[CQ:at,qq={user_qq}]")
+    msg_at = Message("@" + name)
 
-def get_group_thing(group_id, raw_cmd, ori_cmd_set) -> str:
     thing = bread_config.special_thing_group.get(group_id, bread_config.bread_thing)
-    if raw_cmd[1:] in ori_cmd_set:
-        return thing
-    elif thing in raw_cmd:
-        return thing
-    else:
+    if not cmd[1:] in cmd_ori and thing not in cmd:
         raise CommandError
+
+    if (bread_config.global_bread and group_id in bread_config.black_bread_groups) or \
+            (not bread_config.global_bread and group_id not in bread_config.white_bread_groups):
+        await bot.send(event=event, message=f"本群已禁止{thing}店！请联系bot管理员！")
+        raise CommandError
+
+    return user_qq, group_id, name, msg_at, thing
 
 
 class ArgsError(ValueError):
