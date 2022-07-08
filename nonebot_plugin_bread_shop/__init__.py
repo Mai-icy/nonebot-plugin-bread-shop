@@ -134,7 +134,6 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message =
     try:
         user_qq, group_id, name, msg_at, thing = await pre_get_data(event, bot, cmd, cmd_rob_ori)
     except CommandError:
-        print("?")
         return
 
     robbed_qq = None
