@@ -2,6 +2,8 @@
 # -*- coding:utf-8 -*-
 import sqlite3
 import time
+import pinyin
+
 from collections import namedtuple
 from enum import Enum
 from functools import wraps
@@ -206,7 +208,7 @@ class BreadDataManage:
         data = cur.fetchone()
         if not data:
             self._create_user(user_id)
-            data = (0, user_id, 0, 0, 0, 0)
+            data = (0, user_id, 0, 0)
         if col_name == self.DATA_COLUMN[1]:
             ori_num = data[3]
         else:
@@ -230,7 +232,7 @@ class BreadDataManage:
         data = cur.fetchone()
         if not data:
             self._create_user(user_id)
-            data = (0, user_id, 0, 0, 0, 0)
+            data = (0, user_id, 0, 0)
         if col_name == "BREAD_EATEN":
             ori_num = data[3]
         else:
@@ -283,7 +285,7 @@ class BreadDataManage:
         data = cur.fetchone()
         if not data:
             self._create_user(user_id)
-            data = (0, user_id, 0, 0, 0, 0)
+            data = (0, user_id, 0, 0)
         self.conn.commit()
         return BreadData(*data, level=data[3] // LEVEL)
 
