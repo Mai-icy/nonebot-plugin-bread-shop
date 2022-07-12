@@ -308,12 +308,12 @@ async def _(event: Event, bot: Bot, args: Message = CommandArg(), cmd: Message =
     if checked_qq == user_qq:
         user_log = BreadDataManage(group_id).get_log_data(user_qq)
         msg = f"你共购买{user_log.buy_times}次，吃{user_log.eat_times}次，抢{user_log.rob_times}次，" \
-              f"赠送{user_log.give_times}次，猜拳{user_log.eat_times}次！"
+              f"赠送{user_log.give_times}次，猜拳{user_log.bet_times}次！"
     else:
         checked_name = await get_nickname(bot, checked_qq, group_id)
         checked_log = BreadDataManage(group_id).get_log_data(checked_qq)
         msg = f"{checked_name}共购买{checked_log.buy_times}次，吃{checked_log.eat_times}次，抢{checked_log.rob_times}次，" \
-              f"赠送{checked_log.give_times}次，猜拳{checked_log.eat_times}次！"
+              f"赠送{checked_log.give_times}次，猜拳{checked_log.bet_times}次！"
     await bot.send(event=event, message=msg_at + msg)
 
 
