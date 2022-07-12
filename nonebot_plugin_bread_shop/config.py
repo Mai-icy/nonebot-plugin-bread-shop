@@ -2,12 +2,14 @@
 # -*- coding:utf-8 -*-
 from enum import Enum
 from nonebot import get_driver
-from pydantic import BaseSettings, Extra
+from pydantic import BaseSettings, Extra, BaseModel
+from typing import Any, Dict
 
 
 class Config(BaseSettings, extra=Extra.ignore):
     bread_thing: str = "面包"  # 自定义物品，改掉默认的”面包“ 此为全局
-    special_thing_group = {}  # 分群设置物品 示例{"群号": "炸鸡"}
+    special_thing_group: dict = {}  # 分群设置物品 示例{"群号": "炸鸡"} 可设置主次物品词 示例{"群号": ["炸鸡", "面包", "蛋糕"]}
+    # 注：主次物品词bot将以主物品词进行回复，次物品词只用于触发指令，主关键词为列表第一个元素，次关键词可多个
 
     global_bread: bool = True  # 面包默认开关
     black_bread_groups: list = []  # 黑名单

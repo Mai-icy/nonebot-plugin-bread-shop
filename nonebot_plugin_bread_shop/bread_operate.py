@@ -42,6 +42,8 @@ class _Event:
             self.user_data = BreadData(0, "0", 0, 0, 0)
             self._private_events = []
             self.thing = bread_config.special_thing_group.get(group_id, bread_config.bread_thing)
+            if isinstance(self.thing, list):
+                self.thing = self.thing[0]
 
     @classmethod
     def add_event(cls, func):

@@ -242,7 +242,7 @@ def give_event_commission(event: GiveEvent):
     user_num = event.bread_db.reduce_bread(event.user_id, give_num * 2)
     event.bread_db.add_bread(event.other_id, give_num)
     append_text = f"哇！这么多{event.thing}，你送了{give_num}个给{event.other_name}！" \
-                  f"再给我{give_num}吧嘿嘿！你现在有{user_num}个{event.thing}！"
+                  f"再给我{give_num}个吧嘿嘿！你现在有{user_num}个{event.thing}！"
     event.bread_db.update_no(event.user_id)
     event.bread_db.update_no(event.other_id)
     event.bread_db.cd_update_stamp(event.user_id, Action.GIVE)

@@ -79,7 +79,7 @@ class BreadDataManage:
             else:
                 self.database_path /= "bread.db"
                 self.conn = sqlite3.connect(self.database_path)
-            print("数据库连接！")
+            print(f"群组{group_id}数据库连接！")
 
     def close(self):
         self.conn.close()

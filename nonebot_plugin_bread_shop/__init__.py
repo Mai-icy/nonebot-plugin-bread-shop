@@ -41,21 +41,24 @@ cmd_top = cmd_top_ori.copy()
 cmd_help = cmd_help_ori.copy()
 
 for things in chain(bread_config.special_thing_group.values(), (bread_config.bread_thing,)):
-    cmd_buy.add(f"买{things}")
-    cmd_eat.add(f"吃{things}")
-    cmd_eat.add(f"啃{things}")
-    cmd_rob.add(f"抢{things}")
-    cmd_give.add(f"送{things}")
-    cmd_bet.add(f"{things}猜拳")
-    cmd_bet.add(f"赌{things}")
+    if isinstance(things, str):
+        things = [things]
+    for thing_ in things:
+        cmd_buy.add(f"买{thing_}")
+        cmd_eat.add(f"吃{thing_}")
+        cmd_eat.add(f"啃{thing_}")
+        cmd_rob.add(f"抢{thing_}")
+        cmd_give.add(f"送{thing_}")
+        cmd_bet.add(f"{thing_}猜拳")
+        cmd_bet.add(f"赌{thing_}")
 
-    cmd_log.add(f"{things}记录")
-    cmd_check.add(f"偷看{things}")
-    cmd_check.add(f"查看{things}")
+        cmd_log.add(f"{thing_}记录")
+        cmd_check.add(f"偷看{thing_}")
+        cmd_check.add(f"查看{thing_}")
 
-    cmd_top.add(f"{things}排行")
-    cmd_top.add(f"{things}排名")
-    cmd_help.add(f"{things}帮助")
+        cmd_top.add(f"{thing_}排行")
+        cmd_top.add(f"{thing_}排名")
+        cmd_help.add(f"{thing_}帮助")
 
 bread_buy = on_command("bread_buy", aliases=cmd_buy, priority=5)
 bread_eat = on_command("bread_eat", aliases=cmd_eat, priority=5)
@@ -408,9 +411,16 @@ async def pre_get_data(event, bot, cmd, cmd_ori):
     # msg_at = Message(f"[CQ:at,qq={user_qq}]")
     msg_at = Message("@" + name)
 
-    thing = bread_config.special_thing_group.get(group_id, bread_config.bread_thing)
-    if not cmd[1:] in cmd_ori and thing not in cmd:
-        raise CommandError
+    things_ = bread_config.special_thing_group.get(group_id, bread_config.bread_thing)
+
+    if isinstance(things_, list):
+        if all((not cmd[1:] in cmd_ori and thing not in cmd) for thing in things_):
+            raise CommandError
+        thing = things_[0]
+    else:
+        if not cmd[1:] in cmd_ori and things_ not in cmd:
+            raise CommandError
+        thing = things_
 
     if (bread_config.global_bread and group_id in bread_config.black_bread_groups) or \
             (not bread_config.global_bread and group_id not in bread_config.white_bread_groups):
