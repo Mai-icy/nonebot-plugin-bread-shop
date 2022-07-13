@@ -2,7 +2,6 @@
 # -*- coding:utf-8 -*-
 import sqlite3
 import time
-import pinyin
 
 from collections import namedtuple
 from enum import Enum

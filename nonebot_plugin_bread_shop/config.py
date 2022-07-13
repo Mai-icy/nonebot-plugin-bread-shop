@@ -2,8 +2,7 @@
 # -*- coding:utf-8 -*-
 from enum import Enum
 from nonebot import get_driver
-from pydantic import BaseSettings, Extra, BaseModel
-from typing import Any, Dict
+from pydantic import BaseSettings, Extra
 
 
 class Config(BaseSettings, extra=Extra.ignore):

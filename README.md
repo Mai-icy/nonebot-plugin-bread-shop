@@ -64,6 +64,8 @@ pip install nonebot-plugin-bread-shop
 
 **special_thing_group** ：分群设置物品例如：{"群号": "炸鸡"}
 
+> 可设置主次词，主次物品词bot将以主物品词进行回复，次物品词只用于触发指令，主关键词为列表第一个元素，次关键词可多个 示例：{"群号": ["炸鸡", "面包", "蛋糕"]}
+
 **global_bread**：面包全局开关
 
 **black_bread_groups**：黑名单
