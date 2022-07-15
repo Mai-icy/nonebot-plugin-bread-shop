@@ -84,6 +84,8 @@ pip install nonebot-plugin-bread-shop
 
 **is_random_give,is_random_eat等**：设置是否操作值都由随机值决定(全局)
 
+**is_random_robbed**： 抢面包操作不指定群员可随机抢
+
 (注意：改为False之后用户可以通过 "操作名 + @ + 数量" 或 "操作名 + 数量" 达到效果)
 
 **special\_操作名_group**：设置特别处理的群 （示例： {"群号": bool}）

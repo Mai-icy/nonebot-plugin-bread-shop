@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding:utf-8 -*-
-
+import random
 import re
 from itertools import chain
 
@@ -8,6 +8,7 @@ from nonebot import get_driver
 from nonebot import on_command
 from nonebot.params import CommandArg, RawCommand
 from nonebot.adapters.onebot.v11 import Bot, Event, Message
+from nonebot.adapters.onebot.exception import ActionFailed
 
 from .bread_handle import BreadDataManage, Action
 from .bread_operate import *
@@ -153,8 +154,22 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message =
                 return
 
     if not robbed_qq:
-        return
-    robbed_name = await get_nickname(bot, robbed_qq, group_id)
+        if bread_config.is_random_robbed:
+            all_data = BreadDataManage(group_id).get_all_data()
+            all_qq = [x.user_id for x in all_data if x.bread_num]
+            robbed_name = None
+            while not robbed_name:
+                if not all_qq:
+                    return
+                robbed_qq = all_qq.pop(random.randint(0, len(all_qq) - 1))
+                try:
+                    robbed_name = await get_nickname(bot, robbed_qq, group_id)
+                except ActionFailed:  # 群员不存在
+                    continue
+        else:
+            return
+    else:
+        robbed_name = await get_nickname(bot, robbed_qq, group_id)
 
     wait_time = cd_wait_time(group_id, user_qq, Action.ROB)
     if wait_time > 0:

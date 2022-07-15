@@ -18,21 +18,21 @@ class Config(BaseSettings, extra=Extra.ignore):
     """操作冷却（单位：秒）"""
     cd_buy: int = 4200
     cd_eat: int = 4800
-    cd_rob: int = 7000
+    cd_rob: int = 5000
     cd_give: int = 3000
     cd_bet: int = 5400
 
     """操作随机值上限"""
-    max_buy: int = 10
-    max_eat: int = 7
+    max_buy: int = 7
+    max_eat: int = 8
     max_rob: int = 7
     max_give: int = 10
     max_bet: int = 10
 
     """操作随机值下限"""
     min_buy: int = 1
-    min_eat: int = 1
-    min_rob: int = 1
+    min_eat: int = 2
+    min_rob: int = 2
     min_give: int = 1
     min_bet: int = 5
 
@@ -42,6 +42,8 @@ class Config(BaseSettings, extra=Extra.ignore):
     is_random_rob: bool = True
     is_random_give: bool = True
     is_random_bet: bool = True
+
+    is_random_robbed: bool = True  # 抢面包操作不指定群员可随机抢
 
     special_buy_group: dict = {}  # 示例： {"群号": bool}
     special_eat_group: dict = {}
