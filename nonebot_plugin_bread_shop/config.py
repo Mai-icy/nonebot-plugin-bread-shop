@@ -44,6 +44,7 @@ class Config(BaseSettings, extra=Extra.ignore):
     is_random_bet: bool = True
 
     is_random_robbed: bool = True  # 抢面包操作不指定群员可随机抢
+    is_random_given: bool = True  # 送面包操作不指定群员可随机送
 
     special_buy_group: dict = {}  # 示例： {"群号": bool}
     special_eat_group: dict = {}

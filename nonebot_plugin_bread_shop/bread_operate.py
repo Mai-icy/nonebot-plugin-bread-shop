@@ -19,7 +19,7 @@ def cd_wait_time(group_id, user_id, operate: Action) -> int:
 
 
 class _Event:
-    _event_type = Action.ALL
+    event_type = Action.ALL
     _instance = {}
     _has_init = {}
     _public_events = []
@@ -91,7 +91,7 @@ class _Event:
             return pre_error
 
         return_data = self._special_event()
-        self.bread_db.add_user_log(self.user_id, self._event_type)
+        self.bread_db.add_user_log(self.user_id, self.event_type)
         if return_data:
             return return_data
 
@@ -102,8 +102,8 @@ class _Event:
 
     def _pre_event(self, num=None):
         """预处理事件，提前生成随机值或其它值"""
-        max_num = getattr(MAX, self._event_type.name).value
-        min_num = getattr(MIN, self._event_type.name).value
+        max_num = getattr(MAX, self.event_type.name).value
+        min_num = getattr(MIN, self.event_type.name).value
 
         if not self.is_random() and num is not None:
             if min_num <= num <= max_num:
@@ -130,7 +130,7 @@ class _Event2(_Event):
 
 
 class BuyEvent(_Event):
-    _event_type = Action.BUY
+    event_type = Action.BUY
     _instance = {}
     _has_init = {}
     _public_events = []
@@ -150,7 +150,7 @@ class BuyEvent(_Event):
 
 
 class EatEvent(_Event):
-    _event_type = Action.EAT
+    event_type = Action.EAT
     _instance = {}
     _has_init = {}
     _public_events = []
@@ -175,7 +175,7 @@ class EatEvent(_Event):
 
 
 class BetEvent(_Event):
-    _event_type = Action.BET
+    event_type = Action.BET
     _instance = {}
     _has_init = {}
     _public_events = []
@@ -231,7 +231,7 @@ class BetEvent(_Event):
 
 
 class RobEvent(_Event2):
-    _event_type = Action.ROB
+    event_type = Action.ROB
     _instance = {}
     _has_init = {}
     _public_events = []
@@ -270,7 +270,7 @@ class RobEvent(_Event2):
 
 
 class GiveEvent(_Event2):
-    _event_type = Action.GIVE
+    event_type = Action.GIVE
     _instance = {}
     _has_init = {}
     _public_events = []

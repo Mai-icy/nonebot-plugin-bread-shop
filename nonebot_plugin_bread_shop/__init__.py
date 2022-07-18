@@ -142,6 +142,7 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message =
 
     robbed_qq = None
     rob_num = None
+    robbed_name = None
     for arg in args:
         if arg.type == "at":
             robbed_qq = arg.data.get("qq", "")
@@ -157,9 +158,10 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message =
         if bread_config.is_random_robbed:
             all_data = BreadDataManage(group_id).get_all_data()
             all_qq = [x.user_id for x in all_data if x.bread_num]
-            robbed_name = None
+            all_qq.remove(user_qq)
             while not robbed_name:
                 if not all_qq:
+                    await bot.send(event=event, message="没有可以抢的群员w")
                     return
                 robbed_qq = all_qq.pop(random.randint(0, len(all_qq) - 1))
                 try:
@@ -167,6 +169,7 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message =
                 except ActionFailed:  # 群员不存在
                     continue
         else:
+            await bot.send(event=event, message="不支持随机抢！请指定用户进行抢")
             return
     else:
         robbed_name = await get_nickname(bot, robbed_qq, group_id)
@@ -195,6 +198,7 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message =
 
     given_qq = None
     give_num = None
+    given_name = None
     for arg in args:
         if arg.type == "at":
             given_qq = arg.data.get("qq", "")
@@ -207,8 +211,24 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message =
                 return
 
     if not given_qq:
-        return
-    given_name = await get_nickname(bot, given_qq, group_id)
+        if bread_config.is_random_given:
+            all_data = BreadDataManage(group_id).get_all_data()
+            all_qq = [x.user_id for x in all_data if x.bread_num]
+            all_qq.remove(user_qq)
+            while not given_name:
+                if not all_qq:
+                    await bot.send(event=event, message="没有可以赠送的群员w")
+                    return
+                given_qq = all_qq.pop(random.randint(0, len(all_qq) - 1))
+                try:
+                    given_name = await get_nickname(bot, given_qq, group_id)
+                except ActionFailed:  # 群员不存在
+                    continue
+        else:
+            await bot.send(event=event, message="不支持随机赠送！请指定用户进行赠送")
+            return
+    else:
+        given_name = await get_nickname(bot, given_qq, group_id)
 
     wait_time = cd_wait_time(group_id, user_qq, Action.GIVE)
     if wait_time > 0:
