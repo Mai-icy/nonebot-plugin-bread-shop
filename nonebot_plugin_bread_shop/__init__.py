@@ -263,7 +263,7 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message =
         return
     else:
         texts = args.extract_plain_text().split()
-        ges = texts[0]
+        ges = texts[0] if texts else ""
         bet_num = None
         if len(texts) == 2:
             bet_txt = texts[1]
