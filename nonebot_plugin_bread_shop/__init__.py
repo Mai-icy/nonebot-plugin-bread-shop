@@ -263,7 +263,7 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message =
         return
     else:
         texts = args.extract_plain_text().split()
-        ges = texts[0] if texts else ""
+        ges = texts[0] if texts else ''
         bet_num = None
         if len(texts) == 2:
             bet_txt = texts[1]
@@ -372,20 +372,41 @@ async def _(event: Event, bot: Bot, cmd: Message = RawCommand()):
 {thing}记录+""   查看操作次数最多的人
 {thing}记录+@    查看操作次数
 查看{thing}+@    查看{thing}数据
-{thing}排行	    本群排行榜top5
+{thing}排行+	    本群排行榜top5
 更多详情见本项目地址：
 https://github.com/Mai-icy/nonebot-plugin-bread-shop"""
     await bot.send(event=event, message=msg)
 
 
 @bread_top.handle()
-async def _(bot: Bot, event: Event, cmd: Message = RawCommand()):
+async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message = RawCommand()):
     try:
         user_qq, group_id, name, msg_at, thing = await pre_get_data(event, bot, cmd, cmd_top_ori)
     except CommandError:
         return
+    args_list = args.extract_plain_text().strip().split()
+    if not all(arg.isdigit() for arg in args_list):
+        await bot.send(event=event, message="请输入数字！")
+        return
 
-    msg = await get_group_top(bot, group_id, thing)
+    if len(args_list) == 1:
+        if int(args_list[0]) > 10 or int(args_list[0]) < 1:
+            await bot.send(event=event, message="超出范围了！")
+            return
+        msg = await get_group_top(bot, group_id, thing, end=int(args_list[0]))
+    elif len(args_list) == 2:
+        end = int(args_list[1])
+        start = int(args_list[0])
+        if end - start >= 10 or start > end or start < 1:
+            await bot.send(event=event, message="超出范围了！")
+            return
+        msg = await get_group_top(bot, group_id, thing, start=start, end=end)
+    elif len(args_list) == 0:
+        msg = await get_group_top(bot, group_id, thing)
+    else:
+        await bot.send(event=event, message="参数非法！")
+        return
+
     await bot.send(event=event, message=msg)
 
 
@@ -395,19 +416,21 @@ async def get_group_id(session_id):
     return group_id
 
 
-async def get_group_top(bot: Bot, group_id, thing) -> Message:
+async def get_group_top(bot: Bot, group_id, thing, start=1, end=5) -> Message:
     group_member_list = await bot.get_group_member_list(group_id=int(group_id))
     user_id_list = {info['user_id'] for info in group_member_list}
     all_data = BreadDataManage(group_id).get_all_data()
     num = 0
-    append_text = f"🍞本群{thing}排行top5！🍞\n"
+    append_text = f"🍞本群{thing}排行top！🍞\n"
     for data in all_data:
         if int(data.user_id) in user_id_list:
             num += 1
-            name = await get_nickname(bot, data.user_id, group_id)
-            append_text += f"top{num} : {name} Lv.{data.bread_eaten // LEVEL}，拥有{thing}{data.bread_num}个\n"
-        if num == 5:
-            break
+            if start <= num <= end:
+                name = await get_nickname(bot, data.user_id, group_id)
+                append_text += f"top{num} : {name} Lv.{data.bread_eaten // LEVEL}，拥有{thing}{data.bread_num}个\n"
+            if num > end:
+                break
+
     append_text += "大家继续加油w！"
     return Message(append_text)
 

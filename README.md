@@ -52,7 +52,7 @@ pip install nonebot-plugin-bread-shop
 | 面包记录 + “买吃抢赠送猜拳” | 查看操作次数最多的人 |logb，记录|
 | 赌面包 + “石头剪刀布” | 和bot进行猜拳赌随机数量面包 |bet，面包猜拳|
 | 面包帮助 | 送指定用户随机数量面包 |breadhelp，helpb|
-| 面包排行 | 发送面包店操作指南 |breadtop，面包排名|
+| 面包排行 | 发送面包店操作指南（可加查询范围） |breadtop，面包排名|
 
 ## ⚙️自定义配置
 

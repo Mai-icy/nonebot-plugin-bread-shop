@@ -5,7 +5,7 @@ from functools import wraps
 
 from .bread_handle import Action
 from .bread_operate import RobEvent, EatEvent, BuyEvent, GiveEvent, BetEvent, _Event
-from .config import MIN, MAX, LEVEL
+from .config import MIN, MAX, LEVEL, bread_config
 
 rob_events = []
 eat_events = []
