@@ -157,8 +157,7 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message =
     if not robbed_qq:
         if bread_config.is_random_robbed:
             all_data = BreadDataManage(group_id).get_all_data()
-            all_qq = [x.user_id for x in all_data if x.bread_num]
-            all_qq.remove(user_qq)
+            all_qq = [x.user_id for x in all_data if x.bread_num and x.user_id != user_qq]
             while not robbed_name:
                 if not all_qq:
                     await bot.send(event=event, message="没有可以抢的群员w")
@@ -213,8 +212,7 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message =
     if not given_qq:
         if bread_config.is_random_given:
             all_data = BreadDataManage(group_id).get_all_data()
-            all_qq = [x.user_id for x in all_data if x.bread_num]
-            all_qq.remove(user_qq)
+            all_qq = [x.user_id for x in all_data if x.bread_num and x.user_id != user_qq]
             while not given_name:
                 if not all_qq:
                     await bot.send(event=event, message="没有可以赠送的群员w")
