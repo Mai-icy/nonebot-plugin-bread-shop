@@ -23,7 +23,7 @@ class Config(BaseSettings, extra=Extra.ignore):
     cd_bet: int = 5400
 
     """操作随机值上限"""
-    max_buy: int = 7
+    max_buy: int = 9
     max_eat: int = 8
     max_rob: int = 7
     max_give: int = 10

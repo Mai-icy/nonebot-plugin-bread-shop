@@ -205,7 +205,7 @@ def rob_event_police(event: RobEvent):
 
 
 @probability(0.1, Action.ROB, priority=5)
-def rob_event_addiction(event: BetEvent):
+def rob_event_addiction(event: RobEvent):
     append_text = event.normal_event()
     append_text += "有点上瘾，你想再抢一次！"
     event.bread_db.cd_refresh(event.user_id, Action.ROB)
@@ -228,6 +228,22 @@ def rob_event_police2(event: RobEvent):
 def rob_event_hungry(event: RobEvent):
     append_text = f"太饿了！什么都没抢到，但是你想吃东西！吃{event.thing}冷却刷新！"
     event.bread_db.cd_refresh(event.user_id, Action.EAT)
+    event.bread_db.cd_update_stamp(event.user_id, Action.ROB)
+    return append_text
+
+
+@probability(0.05, Action.ROB, priority=5)
+def rob_event_much(event: RobEvent):
+    if event.other_data.bread_num < event.action_num * 2:
+        return
+    rob_num = event.action_num * 2
+    append_text = f"抢劫大成功！抢了{event.other_name}{rob_num}个{event.thing}！"
+
+    event.bread_db.add_bread(event.user_id, rob_num)
+    event.bread_db.reduce_bread(event.other_id, rob_num)
+    event.bread_db.update_no(event.user_id)
+    event.bread_db.update_no(event.other_id)
+
     event.bread_db.cd_update_stamp(event.user_id, Action.ROB)
     return append_text
 # endregion
@@ -297,4 +313,13 @@ def bet_event_cheat(event: BetEvent):
     event.bread_db.cd_update_stamp(event.user_id, Action.BET)
     return append_text
 
+
+@probability(0.04, Action.BET, priority=5)
+def bet_event_much(event: BetEvent):
+    if event.user_data.bread_num < event.action_num * 2:
+        return
+    event.action_num = event.action_num * 2
+    append_text = event.normal_event()
+    append_text = "加大面包量！" + append_text
+    return append_text
 # endregion
