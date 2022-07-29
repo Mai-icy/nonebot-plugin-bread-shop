@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding:utf-8 -*-
+import random
 import re
 from itertools import chain
 
@@ -141,7 +142,6 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message =
 
     robbed_qq = None
     rob_num = None
-    robbed_name = None
     for arg in args:
         if arg.type == "at":
             robbed_qq = arg.data.get("qq", "")
@@ -157,15 +157,14 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message =
         if bread_config.is_random_robbed:
             all_data = BreadDataManage(group_id).get_all_data()
             all_qq = [x.user_id for x in all_data if x.bread_num and x.user_id != user_qq]
-            while not robbed_name:
-                if not all_qq:
-                    await bot.send(event=event, message="没有可以抢的群员w")
-                    return
-                robbed_qq = all_qq.pop(random.randint(0, len(all_qq) - 1))
-                try:
-                    robbed_name = await get_nickname(bot, robbed_qq, group_id)
-                except ActionFailed:  # 群员不存在
-                    continue
+            if not all_qq:
+                await bot.send(event=event, message="没有可以抢的人w")
+                return
+            robbed_qq = random.choice(all_qq)
+            try:
+                robbed_name = await get_nickname(bot, robbed_qq, group_id)
+            except ActionFailed:  # 群员不存在
+                robbed_name = await get_nickname(bot, robbed_qq)
         else:
             await bot.send(event=event, message="不支持随机抢！请指定用户进行抢")
             return
@@ -196,7 +195,6 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message =
 
     given_qq = None
     give_num = None
-    given_name = None
     for arg in args:
         if arg.type == "at":
             given_qq = arg.data.get("qq", "")
@@ -212,15 +210,14 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message =
         if bread_config.is_random_given:
             all_data = BreadDataManage(group_id).get_all_data()
             all_qq = [x.user_id for x in all_data if x.bread_num and x.user_id != user_qq]
-            while not given_name:
-                if not all_qq:
-                    await bot.send(event=event, message="没有可以赠送的群员w")
-                    return
-                given_qq = all_qq.pop(random.randint(0, len(all_qq) - 1))
-                try:
-                    given_name = await get_nickname(bot, given_qq, group_id)
-                except ActionFailed:  # 群员不存在
-                    continue
+            if not all_qq:
+                await bot.send(event=event, message="没有可以赠送的人w")
+                return
+            given_qq = random.choice(all_qq)
+            try:
+                given_name = await get_nickname(bot, given_qq, group_id)
+            except ActionFailed:  # 群员不存在
+                given_name = await get_nickname(bot, given_qq)
         else:
             await bot.send(event=event, message="不支持随机赠送！请指定用户进行赠送")
             return
@@ -410,7 +407,16 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message =
 async def get_group_id(session_id):
     res = re.findall("_(.*)_", session_id)
     group_id = res[0]
-    return group_id
+
+    # 调整是否全局分群
+    for zone_pair in bread_config.group_database.items():
+        if group_id in zone_pair[1]:
+            return zone_pair[0]
+
+    if bread_config.global_database:
+        return "global"
+    else:
+        return group_id
 
 
 async def get_group_top(bot: Bot, group_id, thing, start=1, end=5) -> Message:
@@ -433,7 +439,7 @@ async def get_group_top(bot: Bot, group_id, thing, start=1, end=5) -> Message:
 
 
 async def get_nickname(bot: Bot, user_id, group_id=None):
-    if group_id:
+    if group_id and group_id != "global" and group_id not in bread_config.group_database.keys():
         info = await bot.get_group_member_info(group_id=int(group_id), user_id=int(user_id))
         other_name = info.get("card", "") or info.get("nickname", "")
         if not other_name:
@@ -465,9 +471,7 @@ async def pre_get_data(event, bot, cmd, cmd_ori):
 
     # msg_at = Message(f"[CQ:at,qq={user_qq}]")
     msg_at = Message("@" + name)
-
     things_ = bread_config.special_thing_group.get(group_id, bread_config.bread_thing)
-
     if isinstance(things_, list):
         if all((not cmd[1:] in cmd_ori and thing not in cmd) for thing in things_):
             raise CommandError

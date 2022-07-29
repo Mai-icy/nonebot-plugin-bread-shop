@@ -15,6 +15,11 @@ class Config(BaseSettings, extra=Extra.ignore):
     white_bread_groups: list = []  # 白名单
     level_bread_num: int = 10  # 设置升一级所需要的面包数量（数据库不保存等级！！等级会随之而变！）
 
+    global_database: bool = False  # 数据库是否全局，若设置了group_database，以其为优先，全局数据库文件夹名为"global"
+    group_database: dict = {}  # 合并一些群的数据库 分组id将作为文件夹名 例：{"分组id":["群号1", "群号2", "群号3"]}
+    # 注意：此处的分组id将生效于 special_thing_group 的设置 示例{"分组id": "炸鸡"}，原来的设置将失效
+    # 特殊事件同理设置的群聊id同理请改为组id
+
     """操作冷却（单位：秒）"""
     cd_buy: int = 4200
     cd_eat: int = 4800

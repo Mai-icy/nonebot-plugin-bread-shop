@@ -92,6 +92,14 @@ pip install nonebot-plugin-bread-shop
 
 **special\_操作名_group**：设置特别处理的群 （示例： {"群号": bool}）
 
+
+**global_database**: 数据库是否全局，若设置了group_database，以其为优先，全局数据库文件夹名为"global"
+
+**group_database**: 合并一些群的数据库 分组id将作为文件夹名 例：{"分组id":["群号1", "群号2", "群号3"]}
+
+>注意：此处的分组id将生效于 special_thing_group 的设置 示例{"分组id": "炸鸡"}，原来的设置将失效。特殊事件同理设置的群聊id同理请改为组id
+
+
 详情请见config.py文件
 
 ## 🍞自定义事件
