@@ -318,7 +318,7 @@ async def _(event: Event, bot: Bot, args: Message = CommandArg(), cmd: Message =
     except CommandError:
         return
 
-    add_arg = args.extract_plain_text()
+    add_arg = args.extract_plain_text().strip()
     if add_arg:
         action_args = ["买", "吃", "抢", "赠送", "猜拳"]
         if add_arg in action_args:
