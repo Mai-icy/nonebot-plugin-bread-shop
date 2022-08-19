@@ -8,7 +8,7 @@ from nonebot import get_driver
 from nonebot import on_command
 from nonebot.params import CommandArg, RawCommand
 from nonebot.adapters.onebot.v11 import Bot, Event, Message
-from nonebot.adapters.onebot.exception import ActionFailed
+from nonebot.exception import ActionFailed
 
 from .bread_handle import BreadDataManage, Action
 from .bread_operate import *
@@ -472,6 +472,7 @@ async def pre_get_data(event, bot, cmd, cmd_ori):
     # msg_at = Message(f"[CQ:at,qq={user_qq}]")
     msg_at = Message("@" + name)
     things_ = bread_config.special_thing_group.get(group_id, bread_config.bread_thing)
+
     if isinstance(things_, list):
         if all((not cmd[1:] in cmd_ori and thing not in cmd) for thing in things_):
             raise CommandError

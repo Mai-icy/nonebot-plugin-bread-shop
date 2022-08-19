@@ -102,6 +102,10 @@ class _Event:
 
     def _pre_event(self, num=None):
         """预处理事件，提前生成随机值或其它值"""
+        self.thing = bread_config.special_thing_group.get(self.group_id, bread_config.bread_thing)
+        if isinstance(self.thing, list):
+            self.thing = self.thing[0]
+
         max_num = getattr(MAX, self.event_type.name).value
         min_num = getattr(MIN, self.event_type.name).value
 
