@@ -8,7 +8,7 @@ from nonebot import get_driver
 from nonebot import on_command
 from nonebot.params import CommandArg, RawCommand
 from nonebot.adapters.onebot.v11 import Bot, Event, Message
-from nonebot.adapters.onebot.v11.exception import ActionFailed
+from nonebot.exception import ActionFailed
 
 from .bread_handle import BreadDataManage, Action
 from .bread_operate import *
