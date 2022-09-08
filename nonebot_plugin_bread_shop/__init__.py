@@ -8,7 +8,7 @@ from nonebot import get_driver
 from nonebot import on_command
 from nonebot.params import CommandArg, RawCommand
 from nonebot.adapters.onebot.v11 import Bot, Event, Message
-from nonebot.exception import ActionFailed
+from nonebot.adapters.onebot.v11.exception import ActionFailed
 
 from .bread_handle import BreadDataManage, Action
 from .bread_operate import *
@@ -156,7 +156,7 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message =
     if not robbed_qq:
         if bread_config.is_random_robbed:
             all_data = BreadDataManage(group_id).get_all_data()
-            all_qq = [x.user_id for x in all_data if x.bread_num and x.user_id != user_qq]
+            all_qq = [x.user_id for x in all_data if x.bread_num > bread_config.min_rob and x.user_id != user_qq]
             if not all_qq:
                 await bot.send(event=event, message="没有可以抢的人w")
                 return
@@ -469,7 +469,7 @@ async def pre_get_data(event, bot, cmd, cmd_ori):
     group_id = await get_group_id(event.get_session_id())
     name = await get_nickname(bot, user_qq, group_id)
 
-    # msg_at = Message(f"[CQ:at,qq={user_qq}]")
+    # msg_at = Message(f"[CQ:at,qq={user_qq}]")  # 可自行注释选择是否启用有效@
     msg_at = Message("@" + name)
     things_ = bread_config.special_thing_group.get(group_id, bread_config.bread_thing)
 
