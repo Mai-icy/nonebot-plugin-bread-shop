@@ -27,6 +27,7 @@ class _Event:
     _is_random_global = True
 
     def __new__(cls, group_id: str):
+        """事件关于群单例，每个群只能有一个事件实例"""
         if group_id is None:
             return None
         if cls._instance.get(group_id) is None:
@@ -47,6 +48,7 @@ class _Event:
 
     @classmethod
     def add_event(cls, func):
+        """添加单个特殊事件"""
         if not func.group_id_list:
             cls._public_events.append(func)
         else:
@@ -55,17 +57,21 @@ class _Event:
 
     @classmethod
     def add_events(cls, func_list):
+        """添加多个特殊事件"""
         for func in func_list:
             cls.add_event(func)
 
     @classmethod
     def set_random_global(cls, flag):
+        """全局是否随机"""
         cls._is_random_global = flag
 
     def set_random(self, flag):
+        """设置是否随机操作数量，若为False，可以通过指令指定数量"""
         self._is_random[self.group_id] = flag
 
     def is_random(self):
+        """获取 self.group_id 群组是否随机"""
         if self._is_random.get(self.group_id) is not None:
             return self._is_random.get(self.group_id)
         else:
@@ -81,6 +87,7 @@ class _Event:
                 return return_data
 
     def set_user_id(self, user_id: str):
+        """设置用户id以及获取用户数据以待判断"""
         self.user_id = user_id
         self.user_data = self.bread_db.get_bread_data(self.user_id)
 
@@ -98,14 +105,15 @@ class _Event:
         return self.normal_event()
 
     def normal_event(self):
-        """正常事件流程"""
+        """正常事件流程 （虚函数）"""
 
     def _pre_event(self, num=None):
-        """预处理事件，提前生成随机值或其它值"""
+        """预处理事件，提前生成随机值或其它值。 num 为非随机情况下得指定数量值"""
         self.thing = bread_config.special_thing_group.get(self.group_id, bread_config.bread_thing)
         if isinstance(self.thing, list):
             self.thing = self.thing[0]
 
+        # 获取操作最大值或者最小值
         max_num = getattr(MAX, self.event_type.name).value
         min_num = getattr(MIN, self.event_type.name).value
 
@@ -128,12 +136,16 @@ class _Event2(_Event):
         self.other_data = BreadData(0, "0", 0, 0, 0)
 
     def set_other_id(self, other_id: str, other_name: str):
+        """设置第二个用户id 通常为”被操作“的用户"""
         self.other_id = other_id
         self.other_name = other_name
         self.other_data = self.bread_db.get_bread_data(other_id)
 
 
 class BuyEvent(_Event):
+    """
+    买事件，用户增加面包
+    """
     event_type = Action.BUY
     _instance = {}
     _has_init = {}
@@ -154,6 +166,9 @@ class BuyEvent(_Event):
 
 
 class EatEvent(_Event):
+    """
+    吃事件，用户减少面包，增加“已吃面包”数量，在一定值等级会随之提高
+    """
     event_type = Action.EAT
     _instance = {}
     _has_init = {}
@@ -179,6 +194,10 @@ class EatEvent(_Event):
 
 
 class BetEvent(_Event):
+    """
+    猜拳事件，由用户选择“石头”“剪刀”“石头”中的一个，bot将会随机生成一个手势
+    若用户胜利，用户获得面包，若失败，则丢失面包。
+    """
     event_type = Action.BET
     _instance = {}
     _has_init = {}
@@ -192,15 +211,16 @@ class BetEvent(_Event):
         SCISSORS = 2
 
     class RES(Enum):
-        DRAW = 0
+        DRAW = 0  # 平局
         WIN = 1
         LOST = 2
 
     def __init__(self, group_id: str):
         super().__init__(group_id)
-        self.user_gestures = None
+        self.user_gestures = None  # 额外初始化一个手势变量
 
     def set_user_gestures(self, ges: G):
+        """猜拳，设置用户的手势"""
         self.user_gestures = ges
 
     def normal_event(self):
@@ -235,6 +255,9 @@ class BetEvent(_Event):
 
 
 class RobEvent(_Event2):
+    """
+    抢劫事件，用户1获得面包，用户2减少面包
+    """
     event_type = Action.ROB
     _instance = {}
     _has_init = {}
@@ -261,7 +284,7 @@ class RobEvent(_Event2):
 
         self.action_num = random.randint(MIN.ROB.value, min(MAX.ROB.value, self.other_data.bread_num))
         pre_res = super(RobEvent, self)._pre_event(num)
-        if pre_res:
+        if pre_res:  # 有返回值代表事件提前结束
             return pre_res
 
         if self.user_id == self.other_id:
@@ -274,6 +297,9 @@ class RobEvent(_Event2):
 
 
 class GiveEvent(_Event2):
+    """
+    赠送事件，用户1失去面包，用户2获得面包
+    """
     event_type = Action.GIVE
     _instance = {}
     _has_init = {}
@@ -299,7 +325,7 @@ class GiveEvent(_Event2):
 
         self.action_num = random.randint(MIN.GIVE.value, min(MAX.GIVE.value, self.user_data.bread_num))
         pre_res = super(GiveEvent, self)._pre_event(num)
-        if pre_res:
+        if pre_res:  # 有返回值代表事件提前结束
             return pre_res
 
         if self.user_id == self.other_id:
