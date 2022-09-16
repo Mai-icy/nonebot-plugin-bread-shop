@@ -97,6 +97,8 @@ pip install nonebot-plugin-bread-shop
 
 **group_database**: 合并一些群的数据库 分组id将作为文件夹名 例：{"分组id":["群号1", "群号2", "群号3"]}
 
+**is_at_valid**: 选择是否启用有效at （由于担心风控影响，可自行选择）
+
 >注意：此处的分组id将生效于 special_thing_group 的设置 示例{"分组id": "炸鸡"}，原来的设置将失效。特殊事件同理设置的群聊id同理请改为组id
 
 

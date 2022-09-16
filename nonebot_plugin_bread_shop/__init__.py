@@ -17,6 +17,7 @@ from .config import LEVEL, random_config, bread_config
 
 driver = get_driver()
 
+# 基础命令列表（不管是什么物品）
 cmd_buy_ori = {"buy", "🍞"}
 cmd_eat_ori = {"eat", "🍞🍞"}
 cmd_rob_ori = {"rob", "🍞🍞🍞"}
@@ -29,6 +30,7 @@ cmd_check_ori = {"check"}
 cmd_top_ori = {"breadtop"}
 cmd_help_ori = {"breadhelp", "helpb"}
 
+# 基础命令列表（根据物品添加触发）
 cmd_buy = cmd_buy_ori.copy()
 cmd_eat = cmd_eat_ori.copy()
 cmd_rob = cmd_rob_ori.copy()
@@ -40,7 +42,7 @@ cmd_check = cmd_check_ori.copy()
 
 cmd_top = cmd_top_ori.copy()
 cmd_help = cmd_help_ori.copy()
-
+# 进行添加，拓展触发指令
 for things in chain(bread_config.special_thing_group.values(), (bread_config.bread_thing,)):
     if isinstance(things, str):
         things = [things]
@@ -72,12 +74,15 @@ bread_check = on_command("bread_check", aliases=cmd_check, priority=5)
 bread_top = on_command("bread_top", aliases=cmd_top, priority=5)
 bread_help = on_command("bread_help", aliases=cmd_help, priority=5)
 
+# 初始化事件
 EatEvent.add_events(eat_events)
 BuyEvent.add_events(buy_events)
 RobEvent.add_events(rob_events)
 GiveEvent.add_events(give_events)
 BetEvent.add_events(bet_events)
 
+# 设置是否可以指定操作数
+# 例： ”/give @用户 10“即是否可以使用此处的 10
 random_config()
 
 
@@ -93,6 +98,7 @@ async def _(event: Event, bot: Bot, args: Message = CommandArg(), cmd: Message =
         return
 
     wait_time = cd_wait_time(group_id, user_qq, Action.BUY)
+    # 可见cd_wait_time函数的注释
     if wait_time > 0:
         data = BreadDataManage(group_id).get_bread_data(user_qq)
         msg_txt = f"您还得等待{wait_time // 60}分钟才能买{thing}w，现在一共拥有{data.bread_num}个{thing}！您的{thing}排名为:{data.no}"
@@ -156,7 +162,7 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message =
     if not robbed_qq:
         if bread_config.is_random_robbed:
             all_data = BreadDataManage(group_id).get_all_data()
-            all_qq = [x.user_id for x in all_data if x.bread_num > bread_config.min_rob and x.user_id != user_qq]
+            all_qq = [x.user_id for x in all_data if x.bread_num >= bread_config.min_rob and x.user_id != user_qq]
             if not all_qq:
                 await bot.send(event=event, message="没有可以抢的人w")
                 return
@@ -384,11 +390,13 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message =
         return
 
     if len(args_list) == 1:
+        # 指定查看排行榜区间 从 1 - end(即args_list[0])
         if int(args_list[0]) > 10 or int(args_list[0]) < 1:
             await bot.send(event=event, message="超出范围了！")
             return
         msg = await get_group_top(bot, group_id, thing, end=int(args_list[0]))
     elif len(args_list) == 2:
+        # 指定查看排行榜区间 start - end
         end = int(args_list[1])
         start = int(args_list[0])
         if end - start >= 10 or start > end or start < 1:
@@ -405,6 +413,7 @@ async def _(bot: Bot, event: Event, args: Message = CommandArg(), cmd: Message =
 
 
 async def get_group_id(session_id):
+    """获取群号"""
     res = re.findall("_(.*)_", session_id)
     group_id = res[0]
 
@@ -420,6 +429,7 @@ async def get_group_id(session_id):
 
 
 async def get_group_top(bot: Bot, group_id, thing, start=1, end=5) -> Message:
+    """获取群内排行榜"""
     group_member_list = await bot.get_group_member_list(group_id=int(group_id))
     user_id_list = {info['user_id'] for info in group_member_list}
     all_data = BreadDataManage(group_id).get_all_data()
@@ -439,6 +449,7 @@ async def get_group_top(bot: Bot, group_id, thing, start=1, end=5) -> Message:
 
 
 async def get_nickname(bot: Bot, user_id, group_id=None):
+    """获取用户的昵称，若在群中则为群名片，不在群中为qq昵称"""
     if group_id and group_id != "global" and group_id not in bread_config.group_database.keys():
         info = await bot.get_group_member_info(group_id=int(group_id), user_id=int(user_id))
         other_name = info.get("card", "") or info.get("nickname", "")
@@ -452,6 +463,10 @@ async def get_nickname(bot: Bot, user_id, group_id=None):
 
 
 def get_num_arg(text, event_type, group_id):
+    """
+    获取指令中的操作数量
+    例： ”/give @用户 10“ 中的 10
+    """
     text = text.strip()
     if text:
         if event_type(group_id).is_random():
@@ -469,12 +484,16 @@ async def pre_get_data(event, bot, cmd, cmd_ori):
     group_id = await get_group_id(event.get_session_id())
     name = await get_nickname(bot, user_qq, group_id)
 
-    # msg_at = Message(f"[CQ:at,qq={user_qq}]")  # 可自行注释选择是否启用有效@
-    msg_at = Message("@" + name)
+    if bread_config.is_at_valid:
+        msg_at = Message(f"[CQ:at,qq={user_qq}]")  # at生效
+    else:
+        msg_at = Message("@" + name)  # at不生效，为纯文本
+
     things_ = bread_config.special_thing_group.get(group_id, bread_config.bread_thing)
 
     if isinstance(things_, list):
         if all((not cmd[1:] in cmd_ori and thing not in cmd) for thing in things_):
+            # 指令物品不匹配
             raise CommandError
         thing = things_[0]
     else:

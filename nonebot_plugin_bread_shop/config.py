@@ -57,6 +57,9 @@ class Config(BaseSettings, extra=Extra.ignore):
     special_give_group: dict = {}
     special_bet_group: dict = {}
 
+    """设置是否启用有效@"""
+    is_at_valid: bool = False
+
 
 global_config = get_driver().config
 bread_config = Config(**global_config.dict())  # 载入配置
