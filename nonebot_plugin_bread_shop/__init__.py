@@ -429,14 +429,18 @@ async def get_group_id(session_id):
 
 
 async def get_group_top(bot: Bot, group_id, thing, start=1, end=5) -> Message:
-    """获取群内排行榜"""
-    group_member_list = await bot.get_group_member_list(group_id=int(group_id))
+    """获取群内（或全局）排行榜"""
+    if group_id == "global":
+        group_member_list = []
+    else:
+        group_member_list = await bot.get_group_member_list(group_id=int(group_id))
+
     user_id_list = {info['user_id'] for info in group_member_list}
     all_data = BreadDataManage(group_id).get_all_data()
     num = 0
     append_text = f"🍞本群{thing}排行top！🍞\n"
     for data in all_data:
-        if int(data.user_id) in user_id_list:
+        if int(data.user_id) in user_id_list or group_id == "global":
             num += 1
             if start <= num <= end:
                 name = await get_nickname(bot, data.user_id, group_id)
